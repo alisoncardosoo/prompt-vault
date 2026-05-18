@@ -100,6 +100,17 @@ type State = {
     userName?: string;
     theme?: "light" | "dark" | "system";
   }) => void;
+
+  // Realtime actions — update local state only, no Supabase writes
+  _realtimePromptUpsert: (prompt: Prompt) => void;
+  _realtimePromptTrash: (id: string, deletedAt: number) => void;
+  _realtimePromptDelete: (id: string) => void;
+  _realtimeCategoryUpsert: (cat: Category) => void;
+  _realtimeCategoryDelete: (id: string) => void;
+  _realtimeProfileUpdate: (update: {
+    user_name?: string;
+    theme?: "light" | "dark" | "system";
+  }) => void;
 };
 
 const uid = () => Math.random().toString(36).slice(2, 10);
@@ -414,6 +425,60 @@ export const usePromptStore = create<State>()(
           theme: data.theme ?? get().theme,
           selectedId: data.prompts[0]?.id ?? null,
         }),
+
+      _realtimePromptUpsert: (prompt) => {
+        const { prompts, trashedPrompts } = get();
+        const inActive = prompts.find((x) => x.id === prompt.id);
+        const inTrash = trashedPrompts.find((x) => x.id === prompt.id);
+        if (inActive) {
+          set({ prompts: prompts.map((x) => (x.id === prompt.id ? prompt : x)) });
+        } else if (inTrash) {
+          set({
+            trashedPrompts: trashedPrompts.filter((x) => x.id !== prompt.id),
+            prompts: [prompt, ...prompts],
+          });
+        } else {
+          set({ prompts: [prompt, ...prompts] });
+        }
+      },
+
+      _realtimePromptTrash: (id, deletedAt) => {
+        const { prompts, trashedPrompts, selectedId } = get();
+        const prompt = prompts.find((x) => x.id === id);
+        if (!prompt) return;
+        set({
+          prompts: prompts.filter((x) => x.id !== id),
+          trashedPrompts: [{ ...prompt, deletedAt }, ...trashedPrompts.filter((x) => x.id !== id)],
+          selectedId: selectedId === id ? null : selectedId,
+        });
+      },
+
+      _realtimePromptDelete: (id) => {
+        const { prompts, trashedPrompts, selectedId } = get();
+        set({
+          prompts: prompts.filter((x) => x.id !== id),
+          trashedPrompts: trashedPrompts.filter((x) => x.id !== id),
+          selectedId: selectedId === id ? null : selectedId,
+        });
+      },
+
+      _realtimeCategoryUpsert: (cat) => {
+        const { categories } = get();
+        const exists = categories.find((c) => c.id === cat.id);
+        set({
+          categories: exists
+            ? categories.map((c) => (c.id === cat.id ? cat : c))
+            : [...categories, cat],
+        });
+      },
+
+      _realtimeCategoryDelete: (id) =>
+        set({ categories: get().categories.filter((c) => c.id !== id) }),
+
+      _realtimeProfileUpdate: (update) => {
+        if (update.user_name !== undefined) set({ userName: update.user_name });
+        if (update.theme !== undefined) set({ theme: update.theme });
+      },
     }),
     {
       name: "promptlibrary-v1",

@@ -5,6 +5,7 @@ import { AuthProvider, useAuth } from "@/lib/auth";
 import { AuthScreen } from "@/components/app/AuthScreen";
 import { usePromptStore } from "@/lib/promptStore";
 import { loadUserData, pushAllToSupabase } from "@/lib/sync";
+import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
 function NotFoundComponent() {
   return (
@@ -74,6 +75,8 @@ function AppGate() {
   const { replaceAll, setUserId, prompts, trashedPrompts, categories, userName, theme } =
     usePromptStore();
   const synced = useRef(false);
+
+  useRealtimeSync(user?.id ?? null);
 
   useEffect(() => {
     if (!user || synced.current) return;

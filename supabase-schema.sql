@@ -70,3 +70,8 @@ $$ language plpgsql security definer;
 create trigger on_auth_user_created
   after insert on auth.users
   for each row execute function public.handle_new_user();
+
+-- Ativar Realtime para sincronização entre dispositivos
+alter publication supabase_realtime add table public.prompts;
+alter publication supabase_realtime add table public.categories;
+alter publication supabase_realtime add table public.profiles;

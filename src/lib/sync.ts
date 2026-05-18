@@ -3,7 +3,7 @@ import type { Prompt, Category, TrashedPrompt } from "./promptStore";
 
 // ─── DB row shapes ────────────────────────────────────────────────────────────
 
-type DbPrompt = {
+export type DbPrompt = {
   id: string;
   user_id: string;
   title: string;
@@ -38,7 +38,7 @@ type DbProfile = {
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
-function dbToPrompt(row: DbPrompt): Prompt {
+export function dbToPrompt(row: DbPrompt): Prompt {
   return {
     id: row.id,
     title: row.title,
@@ -58,7 +58,7 @@ function dbToPrompt(row: DbPrompt): Prompt {
   };
 }
 
-function dbToTrashed(row: DbPrompt): TrashedPrompt {
+export function dbToTrashed(row: DbPrompt): TrashedPrompt {
   return { ...dbToPrompt(row), deletedAt: row.deleted_at! };
 }
 
