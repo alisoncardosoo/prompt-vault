@@ -96,25 +96,32 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
 
       const categoryId = inferCategory(result.tags, result.tool, categories);
 
-      savePrompt({
-        title: result.title,
-        content: result.content,
-        description: result.description,
-        categoryId,
-        tool: result.tool,
-        tags: result.tags,
-        notes: result.notes,
-        rating: 0,
-        isFavorite: false,
-        isArchived: false,
-        attachments: previews.map((p) => ({
-          id: p.id,
-          name: p.name,
-          size: p.size,
-          type: p.type,
-          data: p.data,
-        })),
-      });
+      try {
+        savePrompt({
+          title: result.title,
+          content: result.content,
+          description: result.description,
+          categoryId,
+          tool: result.tool,
+          tags: result.tags,
+          notes: result.notes,
+          rating: 0,
+          isFavorite: false,
+          isArchived: false,
+          attachments: previews.map((p) => ({
+            id: p.id,
+            name: p.name,
+            size: p.size,
+            type: p.type,
+            data: p.data,
+          })),
+        });
+      } catch (saveErr) {
+        console.error(saveErr);
+        setStatus("error");
+        setError("A análise funcionou, mas houve erro ao salvar o prompt.");
+        return;
+      }
 
       toast.success("Prompt criado a partir da imagem", { description: result.title });
       handleClose();

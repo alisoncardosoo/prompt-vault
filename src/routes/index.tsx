@@ -119,6 +119,14 @@ function MobileBottomNav() {
   );
 }
 
+function formatBuildTime(iso: string): string {
+  const date = new Date(iso);
+  return new Intl.DateTimeFormat("pt-BR", {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+}
+
 function Page() {
   const {
     prompts,
@@ -166,12 +174,25 @@ function Page() {
   const [showAll, setShowAll] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<"recent" | "alpha" | "rating">("recent");
+  const [nowMs, setNowMs] = useState(() => Date.now());
+  const buildTime = new Date(__APP_BUILD_TIME__);
+  const isBuildTimeValid = !Number.isNaN(buildTime.getTime());
+  const buildAgeMinutes = Math.floor((nowMs - buildTime.getTime()) / 60000);
+  const isLikelyFresh = isBuildTimeValid && buildAgeMinutes <= 30;
+  const buildStatusText = isLikelyFresh
+    ? "Atualizado recentemente"
+    : "Pode haver versão mais nova";
 
   const SORT_LABELS = { recent: "Recente", alpha: "A–Z", rating: "Avaliação" } as const;
 
   useEffect(() => {
     setShowAll(false);
   }, [view, viewArg, search]);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => setNowMs(Date.now()), 60000);
+    return () => window.clearInterval(timer);
+  }, []);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -363,7 +384,14 @@ function Page() {
         {/* Desktop-only footer */}
         <footer className="hidden lg:flex h-8 px-4 items-center justify-between text-[11px] text-muted-foreground border-t border-border bg-card shrink-0">
           <div className="flex items-center gap-1.5">
-            Último backup: hoje, 09:41 <CheckCircle2 className="size-3.5 text-emerald-500" />
+            Publicado em:{" "}
+            {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}
+            <CheckCircle2
+              className={cn("size-3.5", isLikelyFresh ? "text-emerald-500" : "text-amber-500")}
+            />
+            <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
+              {buildStatusText}
+            </span>
           </div>
         </footer>
       </div>

@@ -124,6 +124,12 @@ type State = {
 
 const uid = () => Math.random().toString(36).slice(2, 10);
 const now = () => Date.now();
+const stripAttachmentData = (attachments: Prompt["attachments"]): Prompt["attachments"] =>
+  attachments.map(({ id, name, size, type }) => ({ id, name, size, type }));
+const stripPromptAttachmentData = (prompt: Prompt): Prompt => ({
+  ...prompt,
+  attachments: stripAttachmentData(prompt.attachments),
+});
 
 const seedCategories: Category[] = [
   { id: "cat-marketing", name: "Marketing", color: "amber" },
@@ -525,8 +531,11 @@ export const usePromptStore = create<State>()(
     {
       name: "promptlibrary-v1",
       partialize: (s) => ({
-        prompts: s.prompts,
-        trashedPrompts: s.trashedPrompts,
+        prompts: s.prompts.map(stripPromptAttachmentData),
+        trashedPrompts: s.trashedPrompts.map((prompt) => ({
+          ...stripPromptAttachmentData(prompt),
+          deletedAt: prompt.deletedAt,
+        })),
         categories: s.categories,
         userName: s.userName,
         theme: s.theme,
