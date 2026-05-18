@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useAuth } from "@/lib/auth";
+import { supabaseConfigured } from "@/lib/supabase";
 
 type Mode = "signin" | "signup";
 
@@ -27,6 +28,25 @@ export function AuthScreen() {
       setDone(true);
     }
   };
+
+  if (!supabaseConfigured) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background px-4">
+        <div className="w-full max-w-sm rounded-2xl border border-destructive/30 bg-destructive/10 p-6 text-center">
+          <h1 className="text-base font-semibold text-destructive">Configuração incompleta</h1>
+          <p className="mt-2 text-sm text-muted-foreground">
+            As variáveis <code className="font-mono text-xs">VITE_SUPABASE_URL</code> e{" "}
+            <code className="font-mono text-xs">VITE_SUPABASE_ANON_KEY</code> não estão definidas
+            neste deploy.
+          </p>
+          <p className="mt-3 text-sm text-muted-foreground">
+            Adicione-as em <strong>Vercel → Settings → Environment Variables</strong> e faça um novo
+            deploy.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   if (done) {
     return (
@@ -155,5 +175,11 @@ function translateError(msg: string): string {
   if (msg.includes("Email not confirmed")) return "Confirme seu email antes de entrar.";
   if (msg.includes("User already registered")) return "Este email já está cadastrado.";
   if (msg.includes("Password should be")) return "A senha deve ter pelo menos 6 caracteres.";
+  if (
+    msg.includes("Load failed") ||
+    msg.includes("Failed to fetch") ||
+    msg.includes("NetworkError")
+  )
+    return "Erro de conexão. Verifique sua internet ou se o servidor dev foi reiniciado após criar o .env.local.";
   return msg;
 }
