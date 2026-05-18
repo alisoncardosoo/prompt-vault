@@ -296,7 +296,8 @@ function SidebarInner({
                         key={color}
                         onClick={() => {
                           const name = prompt(`Nome da pasta (${label})?`);
-                          if (name?.trim()) usePromptStore.getState().addCategory(name.trim(), color);
+                          if (name?.trim())
+                            usePromptStore.getState().addCategory(name.trim(), color);
                         }}
                       >
                         <span className={cn("size-2.5 rounded-sm mr-2", catBg[color])} />
@@ -349,7 +350,10 @@ function SidebarInner({
                                 ["rose", "Rosa"],
                               ] as const
                             ).map(([color, label]) => (
-                              <DropdownMenuItem key={color} onClick={() => setCategoryColor(c.id, color)}>
+                              <DropdownMenuItem
+                                key={color}
+                                onClick={() => setCategoryColor(c.id, color)}
+                              >
                                 <span className={cn("size-2.5 rounded-sm mr-2", catBg[color])} />
                                 {label}
                                 {c.color === color && <Check className="size-3.5 ml-auto" />}
@@ -359,7 +363,9 @@ function SidebarInner({
                               className="text-destructive focus:text-destructive"
                               onClick={() => {
                                 if (
-                                  confirm(`Excluir a pasta "${c.name}"? Os prompts não serão excluídos.`)
+                                  confirm(
+                                    `Excluir a pasta "${c.name}"? Os prompts não serão excluídos.`,
+                                  )
                                 ) {
                                   deleteCategory(c.id);
                                 }
