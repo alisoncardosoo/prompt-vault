@@ -72,8 +72,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function AppGate() {
   const { user, loading } = useAuth();
-  const { replaceAll, setUserId, prompts, trashedPrompts, categories, userName, theme } =
-    usePromptStore();
+  const { replaceAll, setUserId } = usePromptStore();
   const synced = useRef(false);
 
   useRealtimeSync(user?.id ?? null);
@@ -89,7 +88,6 @@ function AppGate() {
         const hasCloudData = cloud.length > 0 || cloudCats.length > 0;
 
         if (hasCloudData) {
-          // Cloud has data — use it as source of truth
           replaceAll({
             prompts: cloud,
             trashedPrompts: cloudTrashed,
@@ -98,12 +96,14 @@ function AppGate() {
             theme: profile?.theme,
           });
         } else {
-          // First login — push local data to cloud
+          // Primeiro login — lê snapshot atual do store sem se subscrever a mudanças
+          const { prompts, trashedPrompts, categories, userName, theme } =
+            usePromptStore.getState();
           pushAllToSupabase(user.id, prompts, trashedPrompts, categories, userName, theme);
         }
       },
     );
-  }, [user, setUserId, replaceAll, prompts, trashedPrompts, categories, userName, theme]);
+  }, [user, setUserId, replaceAll]);
 
   // Reset sync flag on logout
   useEffect(() => {

@@ -19,8 +19,10 @@ export function useRealtimeSync(userId: string | null) {
             store._realtimePromptDelete((payload.old as { id: string }).id);
           } else {
             const row = payload.new as DbPrompt;
-            if (row.deleted_at !== null) {
-              store._realtimePromptTrash(row.id, row.deleted_at!);
+            // Supabase Realtime envia bigint como string — coerce para número
+            const deletedAt = row.deleted_at != null ? Number(row.deleted_at) : null;
+            if (deletedAt !== null) {
+              store._realtimePromptTrash(row.id, deletedAt);
             } else {
               store._realtimePromptUpsert(dbToPrompt(row));
             }

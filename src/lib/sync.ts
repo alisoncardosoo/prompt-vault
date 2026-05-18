@@ -52,9 +52,10 @@ export function dbToPrompt(row: DbPrompt): Prompt {
     isFavorite: row.is_favorite,
     isArchived: row.is_archived,
     attachments: row.attachments ?? [],
-    createdAt: row.created_at,
-    updatedAt: row.updated_at,
-    lastUsedAt: row.last_used_at,
+    // Supabase Realtime envia bigint como string via WebSocket — coerce para número
+    createdAt: Number(row.created_at),
+    updatedAt: Number(row.updated_at),
+    lastUsedAt: row.last_used_at != null ? Number(row.last_used_at) : null,
   };
 }
 

@@ -238,7 +238,7 @@ export const usePromptStore = create<State>()(
       trashedPrompts: [],
       categories: seedCategories,
       userName: "Allison",
-      selectedId: seedPrompts[0]?.id ?? null,
+      selectedId: null,
       search: "",
       view: "all",
       viewArg: null,
@@ -423,7 +423,7 @@ export const usePromptStore = create<State>()(
           categories: data.categories,
           userName: data.userName ?? get().userName,
           theme: data.theme ?? get().theme,
-          selectedId: data.prompts[0]?.id ?? null,
+          selectedId: null,
         }),
 
       _realtimePromptUpsert: (prompt) => {
@@ -444,13 +444,23 @@ export const usePromptStore = create<State>()(
 
       _realtimePromptTrash: (id, deletedAt) => {
         const { prompts, trashedPrompts, selectedId } = get();
-        const prompt = prompts.find((x) => x.id === id);
-        if (!prompt) return;
-        set({
-          prompts: prompts.filter((x) => x.id !== id),
-          trashedPrompts: [{ ...prompt, deletedAt }, ...trashedPrompts.filter((x) => x.id !== id)],
-          selectedId: selectedId === id ? null : selectedId,
-        });
+        const inActive = prompts.find((x) => x.id === id);
+        const inTrash = trashedPrompts.find((x) => x.id === id);
+        if (inActive) {
+          set({
+            prompts: prompts.filter((x) => x.id !== id),
+            trashedPrompts: [
+              { ...inActive, deletedAt },
+              ...trashedPrompts.filter((x) => x.id !== id),
+            ],
+            selectedId: selectedId === id ? null : selectedId,
+          });
+        } else if (inTrash) {
+          // Já está na lixeira — só atualiza deletedAt caso seja diferente
+          set({
+            trashedPrompts: trashedPrompts.map((x) => (x.id === id ? { ...x, deletedAt } : x)),
+          });
+        }
       },
 
       _realtimePromptDelete: (id) => {

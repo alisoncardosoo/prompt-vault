@@ -108,7 +108,7 @@ export function PromptCard({
         <DropdownMenuTrigger asChild>
           <button
             type="button"
-            className="p-1 rounded hover:bg-muted"
+            className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-lg hover:bg-muted active:bg-muted transition-colors"
             onClick={(e) => e.stopPropagation()}
           >
             <MoreHorizontal className="size-4" />
@@ -165,7 +165,7 @@ export function PromptCard({
       <article
         {...sharedProps}
         className={cn(
-          "text-left bg-card border border-border rounded-xl px-4 py-3 hover:shadow-md transition-all flex items-center gap-4",
+          "text-left bg-card border border-border rounded-xl px-4 py-3 hover:shadow-md transition-all flex items-center gap-4 min-h-[64px] active:bg-muted/50",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
           selected && "ring-2 ring-primary/50 border-primary/30",
           inTrash && "opacity-75",
@@ -200,14 +200,14 @@ export function PromptCard({
     <article
       {...sharedProps}
       className={cn(
-        "text-left bg-card border border-border rounded-xl p-4 hover:shadow-md transition-all flex flex-col gap-2.5 min-h-[180px]",
+        "text-left bg-card border border-border rounded-xl p-4 hover:shadow-md transition-all flex flex-col gap-2.5 min-h-[180px] active:bg-muted/30",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
         selected && "ring-2 ring-primary/50 border-primary/30",
         inTrash && "opacity-75",
       )}
     >
       <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-[15px] leading-tight">{prompt.title}</h3>
+        <h3 className="font-semibold text-base lg:text-[15px] leading-tight">{prompt.title}</h3>
         {!inTrash && <FavBtn />}
       </div>
 

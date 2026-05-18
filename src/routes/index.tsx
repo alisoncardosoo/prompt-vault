@@ -45,12 +45,18 @@ function BottomNavItem({ icon: Icon, label, active, onClick }: BottomNavItemProp
     <button
       onClick={onClick}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[52px] min-h-[44px] transition-colors",
+        "flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] min-h-[44px] transition-all active:scale-95",
         active ? "text-primary" : "text-muted-foreground",
       )}
     >
-      <Icon className="size-5" />
-      <span className="text-[10px] font-medium leading-tight">{label}</span>
+      {/* Active pill indicator */}
+      <div className="relative flex items-center justify-center">
+        {active && <span className="absolute -inset-y-1 -inset-x-3 rounded-full bg-primary/12" />}
+        <Icon className="size-5 relative z-10" />
+      </div>
+      <span className={cn("text-[10px] leading-tight", active ? "font-semibold" : "font-medium")}>
+        {label}
+      </span>
     </button>
   );
 }
@@ -216,7 +222,7 @@ function Page() {
         <AppHeader />
 
         <div className="flex-1 flex min-h-0">
-          <main className="flex-1 overflow-y-auto px-4 md:px-6 lg:px-8 py-4 lg:py-6">
+          <main className="flex-1 overflow-y-auto overscroll-contain px-4 md:px-6 lg:px-8 py-4 lg:py-6">
             <div className="max-w-5xl pb-20 lg:pb-4">
               {!heading ? (
                 <>
@@ -233,13 +239,19 @@ function Page() {
                       <div className="flex bg-card border border-border rounded-lg p-0.5">
                         <button
                           onClick={() => setViewMode("grid")}
-                          className={`p-1.5 rounded ${viewMode === "grid" ? "bg-muted" : "text-muted-foreground"}`}
+                          className={cn(
+                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded transition-colors",
+                            viewMode === "grid" ? "bg-muted" : "text-muted-foreground",
+                          )}
                         >
                           <LayoutGrid className="size-4" />
                         </button>
                         <button
                           onClick={() => setViewMode("list")}
-                          className={`p-1.5 rounded ${viewMode === "list" ? "bg-muted" : "text-muted-foreground"}`}
+                          className={cn(
+                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded transition-colors",
+                            viewMode === "list" ? "bg-muted" : "text-muted-foreground",
+                          )}
                         >
                           <List className="size-4" />
                         </button>
@@ -289,7 +301,7 @@ function Page() {
                       onClick={() => {
                         if (confirm("Esvaziar lixeira permanentemente?")) emptyTrash();
                       }}
-                      className="shrink-0 text-sm text-destructive/70 hover:text-destructive border border-destructive/20 hover:border-destructive/50 rounded-lg px-3 py-1.5 transition-colors"
+                      className="shrink-0 text-sm text-destructive/70 hover:text-destructive border border-destructive/20 hover:border-destructive/50 rounded-lg px-3 py-1.5 min-h-[44px] transition-colors"
                     >
                       Esvaziar lixeira
                     </button>

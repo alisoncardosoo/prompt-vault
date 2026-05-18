@@ -28,19 +28,20 @@ export function CategoryCards() {
           <button
             key={c.id}
             onClick={() => setView("category", c.id)}
-            className={`${s.bg} rounded-xl p-4 text-left hover:shadow-md transition-all min-h-[120px] flex flex-col justify-between group relative`}
+            className={`${s.bg} rounded-xl p-4 text-left hover:shadow-md active:scale-[0.98] transition-all min-h-[120px] flex flex-col justify-between group relative`}
           >
             <div className="flex items-start justify-between">
               <div className={`size-9 rounded-lg flex items-center justify-center ${s.iconBg}`}>
                 <Icon className="size-4.5" />
               </div>
+              {/* Always visible on mobile, hover-only on desktop */}
               <div
                 onClick={(e) => e.stopPropagation()}
-                className="opacity-0 group-hover:opacity-100"
+                className="opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity"
               >
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <span className="size-6 flex items-center justify-center rounded hover:bg-black/10 cursor-pointer">
+                    <span className="min-w-[44px] min-h-[44px] -mt-2 -mr-2 flex items-center justify-center rounded-lg hover:bg-black/10 active:bg-black/10 cursor-pointer">
                       <MoreHorizontal className="size-4 text-foreground/60" />
                     </span>
                   </DropdownMenuTrigger>
