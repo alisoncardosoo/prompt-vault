@@ -179,9 +179,7 @@ function Page() {
   const isBuildTimeValid = !Number.isNaN(buildTime.getTime());
   const buildAgeMinutes = Math.floor((nowMs - buildTime.getTime()) / 60000);
   const isLikelyFresh = isBuildTimeValid && buildAgeMinutes <= 30;
-  const buildStatusText = isLikelyFresh
-    ? "Atualizado recentemente"
-    : "Pode haver versão mais nova";
+  const buildStatusText = isLikelyFresh ? "Atualizado recentemente" : "Pode haver versão mais nova";
 
   const SORT_LABELS = { recent: "Recente", alpha: "A–Z", rating: "Avaliação" } as const;
 
