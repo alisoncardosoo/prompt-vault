@@ -21,6 +21,7 @@ import { DetailPanel } from "@/components/app/DetailPanel";
 import { PromptEditor } from "@/components/app/PromptEditor";
 import { VariablesModal } from "@/components/app/VariablesModal";
 import { SettingsModal } from "@/components/app/SettingsModal";
+import { ImageImportDialog } from "@/components/app/ImageImportDialog";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -120,6 +121,8 @@ function Page() {
     emptyTrash,
     purgeTrashedPrompts,
     theme,
+    imageImportOpen,
+    setImageImportOpen,
   } = usePromptStore();
 
   useEffect(() => {
@@ -277,7 +280,9 @@ function Page() {
                     </div>
                   </div>
 
-                  <CategoryCards />
+                  <div className="hidden md:block">
+                    <CategoryCards />
+                  </div>
 
                   <div className="mt-6 lg:mt-8 mb-4">
                     <h2 className="text-base font-semibold">Prompts recentes</h2>
@@ -352,6 +357,7 @@ function Page() {
       <PromptEditor />
       <VariablesModal />
       <SettingsModal />
+      <ImageImportDialog open={imageImportOpen} onOpenChange={setImageImportOpen} />
       <Toaster position="top-center" />
       <MobileBottomNav />
     </div>

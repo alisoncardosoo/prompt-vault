@@ -1,9 +1,10 @@
-import { Search, Plus, Menu } from "lucide-react";
+import { Search, Plus, Menu, Sparkles } from "lucide-react";
 import { usePromptStore } from "@/lib/promptStore";
 import { Button } from "@/components/ui/button";
 
 export function AppHeader() {
-  const { search, setSearch, openEditor, setCommandOpen, setSidebarOpen } = usePromptStore();
+  const { search, setSearch, openEditor, setCommandOpen, setSidebarOpen, setImageImportOpen } =
+    usePromptStore();
 
   const handleExport = () => {
     const s = usePromptStore.getState();
@@ -51,6 +52,17 @@ export function AppHeader() {
           ⌘K
         </kbd>
       </div>
+
+      {/* Importar imagem */}
+      <Button
+        variant="outline"
+        onClick={() => setImageImportOpen(true)}
+        className="h-11 lg:h-9 gap-1.5 shrink-0 active:scale-95 transition-all"
+        title="Importar prompt de imagem"
+      >
+        <Sparkles className="size-4" />
+        <span className="hidden md:inline">Importar</span>
+      </Button>
 
       {/* Novo prompt — anchored right, 44px on mobile */}
       <Button

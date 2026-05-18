@@ -34,6 +34,8 @@ type DbProfile = {
   id: string;
   user_name: string;
   theme: "light" | "dark" | "system";
+  ai_provider: string;
+  ai_api_key: string;
 };
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
@@ -189,7 +191,12 @@ export function syncDeleteCategory(userId: string, categoryId: string) {
 
 export function syncUpdateProfile(
   userId: string,
-  update: Partial<{ user_name: string; theme: "light" | "dark" | "system" }>,
+  update: Partial<{
+    user_name: string;
+    theme: "light" | "dark" | "system";
+    ai_provider: string;
+    ai_api_key: string;
+  }>,
 ) {
   supabase.from("profiles").update(update).eq("id", userId).then();
 }

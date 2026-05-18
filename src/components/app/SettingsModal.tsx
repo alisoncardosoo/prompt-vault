@@ -4,7 +4,18 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
-import { Sun, Moon, Monitor, Download, Upload, Trash2, AlertTriangle } from "lucide-react";
+import {
+  Sun,
+  Moon,
+  Monitor,
+  Download,
+  Upload,
+  Trash2,
+  AlertTriangle,
+  Bot,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { usePromptStore } from "@/lib/promptStore";
@@ -22,14 +33,24 @@ export function SettingsModal() {
     trashedPrompts,
     emptyTrash,
     replaceAll,
+    aiProvider,
+    setAIProvider,
+    aiApiKey,
+    setAIApiKey,
   } = usePromptStore();
 
   const [nameInput, setNameInput] = useState(userName);
+  const [keyInput, setKeyInput] = useState(aiApiKey);
+  const [showKey, setShowKey] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    if (settingsOpen) setNameInput(userName);
-  }, [settingsOpen, userName]);
+    if (settingsOpen) {
+      setNameInput(userName);
+      setKeyInput(aiApiKey);
+      setShowKey(false);
+    }
+  }, [settingsOpen, userName, aiApiKey]);
 
   const handleSaveName = () => {
     const trimmed = nameInput.trim();
@@ -219,6 +240,84 @@ export function SettingsModal() {
                 <Trash2 className="size-3.5" />
                 Esvaziar lixeira ({trashedPrompts.length})
               </Button>
+            )}
+          </section>
+
+          <Separator />
+
+          {/* Integração IA */}
+          <section className="space-y-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Integração IA
+            </h3>
+            <p className="text-xs text-muted-foreground">
+              Usada para analisar screenshots e extrair prompts automaticamente.
+            </p>
+
+            <div className="space-y-1.5">
+              <Label>Provedor</Label>
+              <div className="flex gap-2">
+                {(["openai", "anthropic"] as const).map((p) => (
+                  <button
+                    key={p}
+                    onClick={() => setAIProvider(p)}
+                    className={cn(
+                      "flex-1 py-2 rounded-lg border text-sm transition-colors",
+                      aiProvider === p
+                        ? "border-primary bg-primary/10 text-primary font-medium"
+                        : "border-border text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    {p === "openai" ? "OpenAI (GPT-4o)" : "Anthropic (Claude)"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label htmlFor="settings-apikey">API Key</Label>
+              <div className="flex gap-2">
+                <div className="relative flex-1">
+                  <Input
+                    id="settings-apikey"
+                    type={showKey ? "text" : "password"}
+                    value={keyInput}
+                    onChange={(e) => setKeyInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") {
+                        setAIApiKey(keyInput.trim());
+                        toast.success("API key salva");
+                      }
+                    }}
+                    placeholder={aiProvider === "openai" ? "sk-..." : "sk-ant-..."}
+                    className="pr-9"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKey((v) => !v)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                  >
+                    {showKey ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
+                  </button>
+                </div>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => {
+                    setAIApiKey(keyInput.trim());
+                    toast.success("API key salva");
+                  }}
+                >
+                  Salvar
+                </Button>
+              </div>
+            </div>
+
+            {aiApiKey && aiProvider && (
+              <p className="text-xs text-emerald-600 flex items-center gap-1.5">
+                <Bot className="size-3.5" />
+                {aiProvider === "openai" ? "GPT-4o" : "Claude"} configurado
+              </p>
             )}
           </section>
 

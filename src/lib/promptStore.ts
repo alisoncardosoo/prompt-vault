@@ -56,12 +56,19 @@ type State = {
   sidebarCollapsed: boolean;
   settingsOpen: boolean;
   theme: "light" | "dark" | "system";
+  aiProvider: "openai" | "anthropic" | "";
+  aiApiKey: string;
+  imageImportOpen: boolean;
 
   setUserId: (id: string | null) => void;
   setSidebarOpen: (b: boolean) => void;
   setSidebarCollapsed: (b: boolean) => void;
   setSettingsOpen: (b: boolean) => void;
   setTheme: (t: "light" | "dark" | "system") => void;
+  setAIProvider: (p: "openai" | "anthropic" | "") => void;
+  setAIApiKey: (k: string) => void;
+  setImageImportOpen: (b: boolean) => void;
+  _hydrateAISettings: (provider: string, key: string) => void;
 
   setSelected: (id: string | null) => void;
   setSearch: (s: string) => void;
@@ -110,6 +117,8 @@ type State = {
   _realtimeProfileUpdate: (update: {
     user_name?: string;
     theme?: "light" | "dark" | "system";
+    ai_provider?: string;
+    ai_api_key?: string;
   }) => void;
 };
 
@@ -251,6 +260,9 @@ export const usePromptStore = create<State>()(
       sidebarCollapsed: false,
       settingsOpen: false,
       theme: "system",
+      aiProvider: "",
+      aiApiKey: "",
+      imageImportOpen: false,
 
       setUserId: (id) => set({ userId: id }),
       setSidebarOpen: (b) => set({ sidebarOpen: b }),
@@ -261,6 +273,23 @@ export const usePromptStore = create<State>()(
         const { userId } = get();
         if (userId) syncUpdateProfile(userId, { theme: t });
       },
+
+      setAIProvider: (p) => {
+        set({ aiProvider: p });
+        const { userId } = get();
+        if (userId) syncUpdateProfile(userId, { ai_provider: p });
+      },
+      setAIApiKey: (k) => {
+        set({ aiApiKey: k });
+        const { userId } = get();
+        if (userId) syncUpdateProfile(userId, { ai_api_key: k });
+      },
+      setImageImportOpen: (b) => set({ imageImportOpen: b }),
+      _hydrateAISettings: (provider, key) =>
+        set({
+          aiProvider: provider as "openai" | "anthropic" | "",
+          aiApiKey: key,
+        }),
 
       setSelected: (id) => set({ selectedId: id }),
       setSearch: (s) => set({ search: s }),
@@ -488,6 +517,9 @@ export const usePromptStore = create<State>()(
       _realtimeProfileUpdate: (update) => {
         if (update.user_name !== undefined) set({ userName: update.user_name });
         if (update.theme !== undefined) set({ theme: update.theme });
+        if (update.ai_provider !== undefined)
+          set({ aiProvider: update.ai_provider as "openai" | "anthropic" | "" });
+        if (update.ai_api_key !== undefined) set({ aiApiKey: update.ai_api_key });
       },
     }),
     {
@@ -498,6 +530,8 @@ export const usePromptStore = create<State>()(
         categories: s.categories,
         userName: s.userName,
         theme: s.theme,
+        aiProvider: s.aiProvider,
+        aiApiKey: s.aiApiKey,
       }),
     },
   ),

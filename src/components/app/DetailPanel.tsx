@@ -471,18 +471,14 @@ export function DetailPanel() {
   const isDesktop = useIsDesktop();
   const p = prompts.find((x) => x.id === selectedId);
 
-  const emptyState = (
-    <div className="flex-1 flex items-center justify-center text-sm text-muted-foreground px-6 text-center">
-      Selecione um prompt para ver os detalhes
-    </div>
-  );
-
   return (
     <>
-      {/* Desktop: permanent side panel */}
-      <aside className="hidden lg:flex w-[420px] shrink-0 border-l border-border bg-card flex-col h-full relative">
-        {p ? <PromptDetail prompt={p} /> : emptyState}
-      </aside>
+      {/* Desktop: permanent side panel — only shown when a prompt is selected */}
+      {p && (
+        <aside className="hidden lg:flex w-[420px] shrink-0 border-l border-border bg-card flex-col h-full relative">
+          <PromptDetail prompt={p} />
+        </aside>
+      )}
 
       {/* Mobile/Tablet: bottom sheet — only open when not on desktop */}
       <Sheet open={!isDesktop && !!selectedId} onOpenChange={(open) => !open && setSelected(null)}>

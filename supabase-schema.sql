@@ -6,8 +6,14 @@ create table public.profiles (
   id uuid references auth.users on delete cascade primary key,
   user_name text not null default 'User',
   theme text not null default 'system',
+  ai_provider text not null default '',
+  ai_api_key text not null default '',
   updated_at timestamptz default now()
 );
+
+-- Migration (se a tabela ja existir, rode estas linhas no Supabase SQL Editor):
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ai_provider text NOT NULL DEFAULT '';
+-- ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS ai_api_key text NOT NULL DEFAULT '';
 
 -- Tabela de categorias
 create table public.categories (

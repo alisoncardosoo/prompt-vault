@@ -101,6 +101,12 @@ function AppGate() {
             usePromptStore.getState();
           pushAllToSupabase(user.id, prompts, trashedPrompts, categories, userName, theme);
         }
+
+        if (profile?.ai_provider || profile?.ai_api_key) {
+          usePromptStore
+            .getState()
+            ._hydrateAISettings(profile.ai_provider ?? "", profile.ai_api_key ?? "");
+        }
       },
     );
   }, [user, setUserId, replaceAll]);
