@@ -21,6 +21,8 @@ import {
 import { Paperclip, X } from "lucide-react";
 import { usePromptStore, type Prompt } from "@/lib/promptStore";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth";
+import { uploadPromptAttachments } from "@/lib/attachmentStorage";
 
 type Attachment = Prompt["attachments"][number];
 
@@ -34,8 +36,10 @@ const TOOLS = ["ChatGPT", "Claude", "Gemini", "Cursor", "Midjourney", "Outro"];
 
 export function PromptEditor() {
   const { editorOpen, editingId, prompts, categories, closeEditor, savePrompt } = usePromptStore();
+  const { user } = useAuth();
   const existing = editingId ? prompts.find((p) => p.id === editingId) : null;
   const [attachments, setAttachments] = useState<Attachment[]>([]);
+  const [saving, setSaving] = useState(false);
 
   const [form, setForm] = useState({
     title: "",
@@ -104,28 +108,42 @@ export function PromptEditor() {
     });
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!form.title.trim() || !form.content.trim())
       return toast.error("Titulo e conteudo sao obrigatorios");
-    savePrompt({
-      id: editingId ?? undefined,
-      title: form.title.trim(),
-      content: form.content,
-      description: form.description,
-      categoryId: form.categoryId,
-      tool: form.tool,
-      tags: form.tags
-        .split(",")
-        .map((t) => t.trim())
-        .filter(Boolean),
-      notes: form.notes,
-      rating: form.rating,
-      isFavorite: form.isFavorite,
-      isArchived: form.isArchived,
-      attachments,
-    });
-    toast.success(existing ? "Prompt atualizado" : "Prompt criado");
-    closeEditor();
+    setSaving(true);
+    try {
+      const promptId = editingId ?? Math.random().toString(36).slice(2, 10);
+      const uploadedAttachments =
+        user?.id && attachments.length > 0
+          ? await uploadPromptAttachments(user.id, promptId, attachments)
+          : attachments;
+
+      savePrompt({
+        id: promptId,
+        title: form.title.trim(),
+        content: form.content,
+        description: form.description,
+        categoryId: form.categoryId,
+        tool: form.tool,
+        tags: form.tags
+          .split(",")
+          .map((t) => t.trim())
+          .filter(Boolean),
+        notes: form.notes,
+        rating: form.rating,
+        isFavorite: form.isFavorite,
+        isArchived: form.isArchived,
+        attachments: uploadedAttachments,
+      });
+      toast.success(existing ? "Prompt atualizado" : "Prompt criado");
+      closeEditor();
+    } catch (err) {
+      console.error(err);
+      toast.error("Falha no envio do anexo. Verifique o bucket do Supabase Storage.");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -254,14 +272,15 @@ export function PromptEditor() {
           </div>
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={closeEditor}>
+          <Button variant="outline" onClick={closeEditor} disabled={saving}>
             Cancelar
           </Button>
           <Button
             onClick={handleSave}
+            disabled={saving}
             className="bg-primary text-primary-foreground hover:bg-primary/90"
           >
-            Salvar
+            {saving ? "Salvando..." : "Salvar"}
           </Button>
         </DialogFooter>
       </DialogContent>

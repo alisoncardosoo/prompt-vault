@@ -36,6 +36,12 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/auth";
+import {
+  getAttachmentPreviewUrl,
+  isAttachmentSynced,
+  uploadPromptAttachments,
+} from "@/lib/attachmentStorage";
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = React.useState(() => window.innerWidth >= 1024);
@@ -73,6 +79,7 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
     savePrompt,
     setSelected,
   } = usePromptStore();
+  const { user } = useAuth();
   const [addingTag, setAddingTag] = useState(false);
   const [newTag, setNewTag] = useState("");
   const [shared, setShared] = useState(false);
@@ -147,8 +154,18 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
           reader.readAsDataURL(file);
         }),
     );
-    Promise.all(readers).then((newAttachments) => {
-      savePrompt({ ...p, attachments: [...p.attachments, ...newAttachments] });
+    Promise.all(readers).then(async (newAttachments) => {
+      try {
+        const nextAttachments = [...p.attachments, ...newAttachments];
+        const uploadedAttachments =
+          user?.id && nextAttachments.length > 0
+            ? await uploadPromptAttachments(user.id, p.id, nextAttachments)
+            : nextAttachments;
+        savePrompt({ ...p, attachments: uploadedAttachments });
+      } catch (err) {
+        console.error(err);
+        toast.error("Falha no envio do anexo para sincronização.");
+      }
     });
     e.target.value = "";
   };
@@ -308,9 +325,13 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
                 onClick={() => setLightbox({ index: i })}
                 className="aspect-square bg-muted border border-border rounded-lg overflow-hidden flex flex-col items-center justify-center text-[10px] text-center relative group hover:ring-2 hover:ring-primary/50 transition-all"
               >
-                {a.type.startsWith("image/") && a.data ? (
+                {a.type.startsWith("image/") && getAttachmentPreviewUrl(a) ? (
                   <>
-                    <img src={a.data} alt={a.name} className="w-full h-full object-cover" />
+                    <img
+                      src={getAttachmentPreviewUrl(a) ?? undefined}
+                      alt={a.name}
+                      className="w-full h-full object-cover"
+                    />
                     <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end p-1">
                       <span className="text-white text-[10px] truncate w-full opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
                         {a.name}
@@ -322,6 +343,9 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
                     <AttachmentIcon type={a.type} />
                     <span className="truncate w-full">{a.name}</span>
                     <span className="text-muted-foreground">{(a.size / 1024).toFixed(0)} KB</span>
+                    {!isAttachmentSynced(a) && (
+                      <span className="text-[9px] text-amber-600">não sincronizado</span>
+                    )}
                   </div>
                 )}
               </button>
@@ -372,15 +396,15 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
                 className="relative flex items-center justify-center max-w-[90vw] max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
               >
-                {a.type.startsWith("image/") && a.data ? (
+                {a.type.startsWith("image/") && getAttachmentPreviewUrl(a) ? (
                   <img
-                    src={a.data}
+                    src={getAttachmentPreviewUrl(a) ?? undefined}
                     alt={a.name}
                     className="max-h-[85vh] max-w-[85vw] object-contain rounded-lg shadow-2xl"
                   />
-                ) : a.type === "application/pdf" && a.data ? (
+                ) : a.type === "application/pdf" && getAttachmentPreviewUrl(a) ? (
                   <iframe
-                    src={a.data}
+                    src={getAttachmentPreviewUrl(a) ?? undefined}
                     title={a.name}
                     className="w-[80vw] h-[85vh] rounded-lg bg-white"
                   />
@@ -389,6 +413,9 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
                     <AttachmentIcon type={a.type} />
                     <span className="text-sm">{a.name}</span>
                     <span className="text-xs text-white/50">{(a.size / 1024).toFixed(0)} KB</span>
+                    {!isAttachmentSynced(a) && (
+                      <span className="text-xs text-amber-300">Anexo local não sincronizado</span>
+                    )}
                   </div>
                 )}
               </div>

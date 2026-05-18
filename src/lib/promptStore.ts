@@ -22,7 +22,15 @@ export type Prompt = {
   rating: number;
   isFavorite: boolean;
   isArchived: boolean;
-  attachments: { id: string; name: string; size: number; type: string; data?: string }[];
+  attachments: {
+    id: string;
+    name: string;
+    size: number;
+    type: string;
+    path?: string;
+    url?: string;
+    data?: string;
+  }[];
   createdAt: number;
   updatedAt: number;
   lastUsedAt: number | null;
@@ -125,7 +133,7 @@ type State = {
 const uid = () => Math.random().toString(36).slice(2, 10);
 const now = () => Date.now();
 const stripAttachmentData = (attachments: Prompt["attachments"]): Prompt["attachments"] =>
-  attachments.map(({ id, name, size, type }) => ({ id, name, size, type }));
+  attachments.map(({ id, name, size, type, path, url }) => ({ id, name, size, type, path, url }));
 const stripPromptAttachmentData = (prompt: Prompt): Prompt => ({
   ...prompt,
   attachments: stripAttachmentData(prompt.attachments),

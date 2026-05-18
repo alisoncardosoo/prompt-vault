@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { usePromptStore } from "@/lib/promptStore";
 import { analyzeImages } from "@/lib/aiImageAnalysis";
+import { useAuth } from "@/lib/auth";
+import { uploadPromptAttachments } from "@/lib/attachmentStorage";
 
 type ImagePreview = {
   id: string;
@@ -44,6 +46,7 @@ const uid = () => Math.random().toString(36).slice(2, 10);
 
 export function ImageImportDialog({ open, onOpenChange }: Props) {
   const { aiProvider, aiApiKey, categories, savePrompt, setSettingsOpen } = usePromptStore();
+  const { user } = useAuth();
 
   const [previews, setPreviews] = useState<ImagePreview[]>([]);
   const [status, setStatus] = useState<"idle" | "analyzing" | "error">("idle");
@@ -95,9 +98,22 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
       );
 
       const categoryId = inferCategory(result.tags, result.tool, categories);
+      const promptId = Math.random().toString(36).slice(2, 10);
+      const attachmentDrafts = previews.map((p) => ({
+        id: p.id,
+        name: p.name,
+        size: p.size,
+        type: p.type,
+        data: p.data,
+      }));
+      const uploadedAttachments =
+        user?.id && attachmentDrafts.length > 0
+          ? await uploadPromptAttachments(user.id, promptId, attachmentDrafts)
+          : attachmentDrafts;
 
       try {
         savePrompt({
+          id: promptId,
           title: result.title,
           content: result.content,
           description: result.description,
@@ -108,13 +124,7 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
           rating: 0,
           isFavorite: false,
           isArchived: false,
-          attachments: previews.map((p) => ({
-            id: p.id,
-            name: p.name,
-            size: p.size,
-            type: p.type,
-            data: p.data,
-          })),
+          attachments: uploadedAttachments,
         });
       } catch (saveErr) {
         console.error(saveErr);
@@ -134,7 +144,9 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
         setError("A IA retornou um formato inesperado. Tente novamente.");
       else if (msg.startsWith("API_ERROR:"))
         setError(`Erro da API: ${msg.replace("API_ERROR: ", "")}`);
-      else setError("Falha ao analisar a imagem. Tente novamente.");
+      else if ("message" in (err as Record<string, unknown>) && String((err as Error).message)) {
+        setError("Falha no envio do anexo para sincronização entre dispositivos.");
+      } else setError("Falha ao analisar a imagem. Tente novamente.");
     }
   };
 

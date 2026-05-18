@@ -42,7 +42,14 @@ function stripAttachmentPayload(
   attachments: Prompt["attachments"] | undefined,
 ): Prompt["attachments"] {
   if (!attachments || attachments.length === 0) return [];
-  return attachments.map(({ id, name, size, type }) => ({ id, name, size, type }));
+  return attachments.map(({ id, name, size, type, path, url }) => ({
+    id,
+    name,
+    size,
+    type,
+    path,
+    url,
+  }));
 }
 
 // ─── Mappers ──────────────────────────────────────────────────────────────────
