@@ -223,7 +223,7 @@ function Page() {
 
         <div className="flex-1 flex min-h-0">
           <main className="flex-1 overflow-y-auto overscroll-contain px-4 md:px-6 lg:px-8 py-4 lg:py-6">
-            <div className="max-w-5xl pb-20 lg:pb-4">
+            <div className="max-w-5xl pb-28 lg:pb-4">
               {!heading ? (
                 <>
                   <div className="flex items-start justify-between mb-5 lg:mb-6 gap-3">
