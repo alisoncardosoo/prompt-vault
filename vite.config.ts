@@ -5,5 +5,19 @@ import tailwindcss from "@tailwindcss/vite";
 import tsconfigPaths from "vite-tsconfig-paths";
 
 export default defineConfig({
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (!id.includes("node_modules")) return;
+          if (id.includes("@tanstack")) return "tanstack";
+          if (id.includes("@supabase")) return "supabase";
+          if (id.includes("@radix-ui")) return "radix-ui";
+          if (id.includes("lucide-react")) return "icons";
+          return "vendor";
+        },
+      },
+    },
+  },
   plugins: [tanstackRouter({ autoCodeSplitting: true }), react(), tailwindcss(), tsconfigPaths()],
 });

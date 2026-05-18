@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import {
@@ -18,10 +18,6 @@ import { AppHeader } from "@/components/app/Header";
 import { CategoryCards } from "@/components/app/CategoryCards";
 import { PromptCard } from "@/components/app/PromptCard";
 import { DetailPanel } from "@/components/app/DetailPanel";
-import { PromptEditor } from "@/components/app/PromptEditor";
-import { VariablesModal } from "@/components/app/VariablesModal";
-import { SettingsModal } from "@/components/app/SettingsModal";
-import { ImageImportDialog } from "@/components/app/ImageImportDialog";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -33,6 +29,21 @@ import {
 export const Route = createFileRoute("/")({
   component: Page,
 });
+
+const PromptEditor = lazy(() =>
+  import("@/components/app/PromptEditor").then((module) => ({ default: module.PromptEditor })),
+);
+const VariablesModal = lazy(() =>
+  import("@/components/app/VariablesModal").then((module) => ({ default: module.VariablesModal })),
+);
+const SettingsModal = lazy(() =>
+  import("@/components/app/SettingsModal").then((module) => ({ default: module.SettingsModal })),
+);
+const ImageImportDialog = lazy(() =>
+  import("@/components/app/ImageImportDialog").then((module) => ({
+    default: module.ImageImportDialog,
+  })),
+);
 
 type BottomNavItemProps = {
   icon: typeof Star;
@@ -122,6 +133,9 @@ function Page() {
     purgeTrashedPrompts,
     theme,
     imageImportOpen,
+    editorOpen,
+    variablesOpen,
+    settingsOpen,
     setImageImportOpen,
   } = usePromptStore();
 
@@ -354,10 +368,14 @@ function Page() {
         </footer>
       </div>
 
-      <PromptEditor />
-      <VariablesModal />
-      <SettingsModal />
-      <ImageImportDialog open={imageImportOpen} onOpenChange={setImageImportOpen} />
+      <Suspense fallback={null}>
+        {editorOpen ? <PromptEditor /> : null}
+        {variablesOpen ? <VariablesModal /> : null}
+        {settingsOpen ? <SettingsModal /> : null}
+        {imageImportOpen ? (
+          <ImageImportDialog open={imageImportOpen} onOpenChange={setImageImportOpen} />
+        ) : null}
+      </Suspense>
       <Toaster position="top-center" />
       <MobileBottomNav />
     </div>

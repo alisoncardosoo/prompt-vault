@@ -38,6 +38,13 @@ type DbProfile = {
   ai_api_key: string;
 };
 
+function stripAttachmentPayload(
+  attachments: Prompt["attachments"] | undefined,
+): Prompt["attachments"] {
+  if (!attachments || attachments.length === 0) return [];
+  return attachments.map(({ id, name, size, type }) => ({ id, name, size, type }));
+}
+
 // ─── Mappers ──────────────────────────────────────────────────────────────────
 
 export function dbToPrompt(row: DbPrompt): Prompt {
@@ -53,7 +60,7 @@ export function dbToPrompt(row: DbPrompt): Prompt {
     rating: row.rating,
     isFavorite: row.is_favorite,
     isArchived: row.is_archived,
-    attachments: row.attachments ?? [],
+    attachments: stripAttachmentPayload(row.attachments ?? []),
     // Supabase Realtime envia bigint como string via WebSocket — coerce para número
     createdAt: Number(row.created_at),
     updatedAt: Number(row.updated_at),
@@ -79,7 +86,7 @@ function promptToDb(userId: string, p: Prompt): DbPrompt {
     rating: p.rating,
     is_favorite: p.isFavorite,
     is_archived: p.isArchived,
-    attachments: p.attachments,
+    attachments: stripAttachmentPayload(p.attachments),
     created_at: p.createdAt,
     updated_at: p.updatedAt,
     last_used_at: p.lastUsedAt,
