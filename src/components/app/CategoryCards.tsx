@@ -1,4 +1,4 @@
-import { Folder, FileCode2, Pencil, Box, User, MoreHorizontal, Trash2 } from "lucide-react";
+import { Folder, FileCode2, Pencil, Box, User, MoreHorizontal, Trash2, Check } from "lucide-react";
 import { usePromptStore } from "@/lib/promptStore";
 import {
   DropdownMenu,
@@ -37,7 +37,8 @@ const styles: Record<string, { bg: string; icon: typeof Folder; iconBg: string }
 };
 
 export function CategoryCards() {
-  const { categories, prompts, setView, renameCategory, deleteCategory } = usePromptStore();
+  const { categories, prompts, setView, renameCategory, setCategoryColor, deleteCategory } =
+    usePromptStore();
   return (
     <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
       {categories.map((c) => {
@@ -74,6 +75,21 @@ export function CategoryCards() {
                     >
                       <Pencil className="size-4 mr-2" /> Renomear
                     </DropdownMenuItem>
+                    {(
+                      [
+                        ["amber", "Âmbar"],
+                        ["lavender", "Lavanda"],
+                        ["sky", "Azul"],
+                        ["mint", "Menta"],
+                        ["rose", "Rosa"],
+                      ] as const
+                    ).map(([color, label]) => (
+                      <DropdownMenuItem key={color} onClick={() => setCategoryColor(c.id, color)}>
+                        <span className={`size-2.5 rounded-sm mr-2 ${styles[color].bg}`} />
+                        Cor: {label}
+                        {c.color === color && <Check className="size-3.5 ml-auto" />}
+                      </DropdownMenuItem>
+                    ))}
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       className="text-destructive focus:text-destructive"

@@ -13,10 +13,17 @@ import {
   ChevronRight,
   ChevronDown,
   Trash2,
+  Check,
 } from "lucide-react";
 import { usePromptStore, type Category } from "@/lib/promptStore";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
 
@@ -142,6 +149,9 @@ function SidebarInner({
     setSidebarOpen,
     setSidebarCollapsed,
     setSettingsOpen,
+    setCategoryColor,
+    deleteCategory,
+    renameCategory,
   } = usePromptStore();
   const tags = Array.from(new Set(prompts.flatMap((p) => p.tags))).slice(0, 8);
   const [openSections, setOpenSections] = useState({
@@ -164,6 +174,12 @@ function SidebarInner({
   const nav = (cb: () => void) => () => {
     cb();
     onNavigate?.();
+  };
+
+  const handleRefreshApp = () => {
+    if (typeof window !== "undefined") {
+      window.location.reload();
+    }
   };
 
   return (
@@ -260,15 +276,35 @@ function SidebarInner({
             onToggle={() => toggleSection("pastas")}
             action={
               !collapsed ? (
-                <button
-                  onClick={() => {
-                    const name = prompt("Nome da pasta?");
-                    if (name) usePromptStore.getState().addCategory(name, "amber");
-                  }}
-                  className="text-muted-foreground hover:text-foreground p-1 rounded"
-                >
-                  <Plus className="size-3.5" />
-                </button>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button className="text-muted-foreground hover:text-foreground p-1 rounded">
+                      <Plus className="size-3.5" />
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end">
+                    {(
+                      [
+                        ["amber", "Âmbar"],
+                        ["lavender", "Lavanda"],
+                        ["sky", "Azul"],
+                        ["mint", "Menta"],
+                        ["rose", "Rosa"],
+                      ] as const
+                    ).map(([color, label]) => (
+                      <DropdownMenuItem
+                        key={color}
+                        onClick={() => {
+                          const name = prompt(`Nome da pasta (${label})?`);
+                          if (name?.trim()) usePromptStore.getState().addCategory(name.trim(), color);
+                        }}
+                      >
+                        <span className={cn("size-2.5 rounded-sm mr-2", catBg[color])} />
+                        {label}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
               ) : undefined
             }
           />
@@ -277,16 +313,65 @@ function SidebarInner({
               {categories.map((c) => {
                 const count = prompts.filter((p) => p.categoryId === c.id).length;
                 return (
-                  <NavItem
-                    key={c.id}
-                    collapsed={collapsed}
-                    active={view === "category" && viewArg === c.id}
-                    onClick={nav(() => setView("category", c.id))}
-                    icon={Folder}
-                    label={c.name}
-                    count={count}
-                    dot={catBg[c.color]}
-                  />
+                  <div key={c.id} className="relative group/folder">
+                    <NavItem
+                      collapsed={collapsed}
+                      active={view === "category" && viewArg === c.id}
+                      onClick={nav(() => setView("category", c.id))}
+                      icon={Folder}
+                      label={c.name}
+                      count={count}
+                      dot={catBg[c.color]}
+                    />
+                    {!collapsed && (
+                      <div className="absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover/folder:opacity-100 transition-opacity">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-sidebar-accent/60">
+                              <SettingsIcon className="size-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuItem
+                              onClick={() => {
+                                const name = prompt("Novo nome da pasta:", c.name);
+                                if (name?.trim()) renameCategory(c.id, name.trim());
+                              }}
+                            >
+                              Renomear pasta
+                            </DropdownMenuItem>
+                            {(
+                              [
+                                ["amber", "Âmbar"],
+                                ["lavender", "Lavanda"],
+                                ["sky", "Azul"],
+                                ["mint", "Menta"],
+                                ["rose", "Rosa"],
+                              ] as const
+                            ).map(([color, label]) => (
+                              <DropdownMenuItem key={color} onClick={() => setCategoryColor(c.id, color)}>
+                                <span className={cn("size-2.5 rounded-sm mr-2", catBg[color])} />
+                                {label}
+                                {c.color === color && <Check className="size-3.5 ml-auto" />}
+                              </DropdownMenuItem>
+                            ))}
+                            <DropdownMenuItem
+                              className="text-destructive focus:text-destructive"
+                              onClick={() => {
+                                if (
+                                  confirm(`Excluir a pasta "${c.name}"? Os prompts não serão excluídos.`)
+                                ) {
+                                  deleteCategory(c.id);
+                                }
+                              }}
+                            >
+                              Excluir pasta
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    )}
+                  </div>
                 );
               })}
             </div>
@@ -351,6 +436,22 @@ function SidebarInner({
           )}
         </div>
       </div>
+
+      {!collapsed && (
+        <div className="shrink-0 border-t border-sidebar-border px-3 py-3">
+          <div className="rounded-xl border border-sidebar-border/80 bg-background/65 p-3 space-y-2">
+            <p className="text-xs text-muted-foreground">Publicado em: 18/05/2026, 18:44</p>
+            <p className="text-xs text-muted-foreground">Pode haver versão mais nova</p>
+            <button
+              type="button"
+              onClick={handleRefreshApp}
+              className="w-full rounded-lg bg-primary/15 px-2.5 py-2 text-xs font-medium text-foreground transition-colors hover:bg-primary/25 active:bg-primary/30"
+            >
+              Atualizar app
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Expand button — only shown when collapsed, desktop only */}
       {!sidebarOpen && collapsed && (

@@ -106,6 +106,7 @@ type State = {
 
   addCategory: (name: string, color: Category["color"]) => string;
   renameCategory: (id: string, name: string) => void;
+  setCategoryColor: (id: string, color: Category["color"]) => void;
   deleteCategory: (id: string) => void;
 
   replaceAll: (data: {
@@ -445,6 +446,16 @@ export const usePromptStore = create<State>()(
 
       renameCategory: (id, name) => {
         const updated = get().categories.map((c) => (c.id === id ? { ...c, name } : c));
+        set({ categories: updated });
+        const { userId } = get();
+        if (userId) {
+          const c = updated.find((x) => x.id === id);
+          if (c) syncUpsertCategory(userId, c);
+        }
+      },
+
+      setCategoryColor: (id, color) => {
+        const updated = get().categories.map((c) => (c.id === id ? { ...c, color } : c));
         set({ categories: updated });
         const { userId } = get();
         if (userId) {
