@@ -103,6 +103,13 @@
   --sidebar: oklch(0.2 0.01 60);
   --sidebar-foreground: oklch(0.92 0.01 80);
   --sidebar-border: oklch(0.3 0.01 60);
+
+  /* Softer folder colors for dark mode */
+  --cat-amber: oklch(0.31 0.035 80);
+  --cat-lavender: oklch(0.31 0.022 300);
+  --cat-sky: oklch(0.31 0.022 230);
+  --cat-mint: oklch(0.31 0.025 160);
+  --cat-rose: oklch(0.31 0.022 20);
 }
 
 @layer base {

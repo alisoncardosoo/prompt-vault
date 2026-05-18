@@ -9,11 +9,31 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 const styles: Record<string, { bg: string; icon: typeof Folder; iconBg: string }> = {
-  amber: { bg: "bg-cat-amber", icon: Folder, iconBg: "bg-amber-200/70 text-amber-700" },
-  lavender: { bg: "bg-cat-lavender", icon: FileCode2, iconBg: "bg-violet-200/70 text-violet-700" },
-  sky: { bg: "bg-cat-sky", icon: Pencil, iconBg: "bg-sky-200/70 text-sky-700" },
-  mint: { bg: "bg-cat-mint", icon: Box, iconBg: "bg-emerald-200/70 text-emerald-700" },
-  rose: { bg: "bg-cat-rose", icon: User, iconBg: "bg-rose-200/70 text-rose-700" },
+  amber: {
+    bg: "bg-cat-amber",
+    icon: Folder,
+    iconBg: "bg-amber-200/70 text-amber-700 dark:bg-amber-300/15 dark:text-amber-200",
+  },
+  lavender: {
+    bg: "bg-cat-lavender",
+    icon: FileCode2,
+    iconBg: "bg-violet-200/70 text-violet-700 dark:bg-violet-300/15 dark:text-violet-200",
+  },
+  sky: {
+    bg: "bg-cat-sky",
+    icon: Pencil,
+    iconBg: "bg-sky-200/70 text-sky-700 dark:bg-sky-300/15 dark:text-sky-200",
+  },
+  mint: {
+    bg: "bg-cat-mint",
+    icon: Box,
+    iconBg: "bg-emerald-200/70 text-emerald-700 dark:bg-emerald-300/15 dark:text-emerald-200",
+  },
+  rose: {
+    bg: "bg-cat-rose",
+    icon: User,
+    iconBg: "bg-rose-200/70 text-rose-700 dark:bg-rose-300/15 dark:text-rose-200",
+  },
 };
 
 export function CategoryCards() {

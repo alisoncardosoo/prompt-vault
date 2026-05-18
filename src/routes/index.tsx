@@ -127,6 +127,12 @@ function formatBuildTime(iso: string): string {
   }).format(date);
 }
 
+function forceRefreshApp() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("refresh", String(Date.now()));
+  window.location.href = url.toString();
+}
+
 function Page() {
   const {
     prompts,
@@ -391,6 +397,14 @@ function Page() {
               {buildStatusText}
             </span>
           </div>
+          {!isLikelyFresh && (
+            <button
+              onClick={forceRefreshApp}
+              className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
+            >
+              Atualizar app
+            </button>
+          )}
         </footer>
       </div>
 
@@ -408,15 +422,25 @@ function Page() {
         style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)" }}
       >
         <div className="mx-auto max-w-md rounded-lg border border-border bg-card/95 backdrop-blur px-3 py-2 text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-1.5">
-            Publicado em:{" "}
-            {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}
-            <CheckCircle2
-              className={cn("size-3.5", isLikelyFresh ? "text-emerald-500" : "text-amber-500")}
-            />
-            <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
-              {buildStatusText}
-            </span>
+          <div className="flex items-center gap-1.5 justify-between">
+            <div className="flex items-center gap-1.5">
+              Publicado em:{" "}
+              {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}
+              <CheckCircle2
+                className={cn("size-3.5", isLikelyFresh ? "text-emerald-500" : "text-amber-500")}
+              />
+              <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
+                {buildStatusText}
+              </span>
+            </div>
+            {!isLikelyFresh && (
+              <button
+                onClick={forceRefreshApp}
+                className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
+              >
+                Atualizar
+              </button>
+            )}
           </div>
         </div>
       </div>
