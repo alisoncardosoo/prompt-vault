@@ -106,10 +106,19 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
         type: p.type,
         data: p.data,
       }));
-      const uploadedAttachments =
-        user?.id && attachmentDrafts.length > 0
-          ? await uploadPromptAttachments(user.id, promptId, attachmentDrafts)
-          : attachmentDrafts;
+      let uploadedAttachments = attachmentDrafts;
+
+      if (user?.id && attachmentDrafts.length > 0) {
+        try {
+          uploadedAttachments = await uploadPromptAttachments(user.id, promptId, attachmentDrafts);
+        } catch (uploadErr) {
+          console.error(uploadErr);
+          toast.warning("Prompt salvo sem sincronizar anexo", {
+            description:
+              "No mobile, o upload pode falhar temporariamente. O conteúdo foi salvo localmente.",
+          });
+        }
+      }
 
       try {
         savePrompt({
@@ -136,6 +145,7 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
       toast.success("Prompt criado a partir da imagem", { description: result.title });
       handleClose();
     } catch (err) {
+      console.error(err);
       setStatus("error");
       const msg = err instanceof Error ? err.message : "Erro desconhecido";
       if (msg === "NO_API_KEY")
@@ -144,9 +154,7 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
         setError("A IA retornou um formato inesperado. Tente novamente.");
       else if (msg.startsWith("API_ERROR:"))
         setError(`Erro da API: ${msg.replace("API_ERROR: ", "")}`);
-      else if ("message" in (err as Record<string, unknown>) && String((err as Error).message)) {
-        setError("Falha no envio do anexo para sincronização entre dispositivos.");
-      } else setError("Falha ao analisar a imagem. Tente novamente.");
+      else setError("Falha ao analisar a imagem. Tente novamente.");
     }
   };
 

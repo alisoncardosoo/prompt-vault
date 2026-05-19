@@ -19,8 +19,10 @@ import {
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { usePromptStore } from "@/lib/promptStore";
+import { useAuth } from "@/lib/auth";
 
 export function SettingsModal() {
+  const { updatePassword } = useAuth();
   const {
     settingsOpen,
     setSettingsOpen,
@@ -42,6 +44,9 @@ export function SettingsModal() {
   const [nameInput, setNameInput] = useState(userName);
   const [keyInput, setKeyInput] = useState(aiApiKey);
   const [showKey, setShowKey] = useState(false);
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [savingPassword, setSavingPassword] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -49,6 +54,9 @@ export function SettingsModal() {
       setNameInput(userName);
       setKeyInput(aiApiKey);
       setShowKey(false);
+      setNewPassword("");
+      setConfirmPassword("");
+      setSavingPassword(false);
     }
   }, [settingsOpen, userName, aiApiKey]);
 
@@ -106,6 +114,30 @@ export function SettingsModal() {
     if (!confirm("Apagar todos os dados? Esta ação não pode ser desfeita.")) return;
     localStorage.removeItem("promptlibrary-v1");
     window.location.reload();
+  };
+
+  const handleChangePassword = async () => {
+    if (newPassword.length < 6) {
+      toast.error("A nova senha deve ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error("As senhas não conferem.");
+      return;
+    }
+
+    setSavingPassword(true);
+    const err = await updatePassword(newPassword);
+    setSavingPassword(false);
+
+    if (err) {
+      toast.error(err);
+      return;
+    }
+
+    setNewPassword("");
+    setConfirmPassword("");
+    toast.success("Senha atualizada com sucesso.");
   };
 
   const themeOptions = [
@@ -169,6 +201,47 @@ export function SettingsModal() {
                 </button>
               ))}
             </div>
+          </section>
+
+          <Separator />
+
+          {/* Segurança */}
+          <section className="space-y-3">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              Segurança
+            </h3>
+            <div className="space-y-1.5">
+              <Label htmlFor="settings-new-password">Nova senha</Label>
+              <Input
+                id="settings-new-password"
+                type="password"
+                autoComplete="new-password"
+                minLength={6}
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="settings-confirm-password">Confirmar nova senha</Label>
+              <Input
+                id="settings-confirm-password"
+                type="password"
+                autoComplete="new-password"
+                minLength={6}
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="w-full"
+              disabled={savingPassword}
+              onClick={handleChangePassword}
+            >
+              {savingPassword ? "Salvando..." : "Trocar senha"}
+            </Button>
           </section>
 
           <Separator />

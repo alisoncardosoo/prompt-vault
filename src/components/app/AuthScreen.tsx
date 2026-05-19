@@ -1,24 +1,52 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabaseConfigured } from "@/lib/supabase";
 
-type Mode = "signin" | "signup";
+type Mode = "signin" | "signup" | "forgot" | "reset";
 
 export function AuthScreen() {
-  const { signIn, signUp } = useAuth();
+  const { signIn, signUp, resetPasswordForEmail, updatePassword } = useAuth();
   const [mode, setMode] = useState<Mode>("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [doneMessage, setDoneMessage] = useState<string | null>(null);
+
+  const isRecoveryLink = useMemo(() => {
+    if (typeof window === "undefined") return false;
+    const hash = new URLSearchParams(window.location.hash.replace(/^#/, ""));
+    return hash.get("type") === "recovery";
+  }, []);
+
+  useEffect(() => {
+    if (isRecoveryLink) {
+      setMode("reset");
+    }
+  }, [isRecoveryLink]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setLoading(true);
+    let err: string | null = null;
 
-    const err = mode === "signin" ? await signIn(email, password) : await signUp(email, password);
+    if (mode === "signin") {
+      err = await signIn(email, password);
+    } else if (mode === "signup") {
+      err = await signUp(email, password);
+    } else if (mode === "forgot") {
+      err = await resetPasswordForEmail(email);
+    } else {
+      if (password !== confirmPassword) {
+        setLoading(false);
+        setError("As senhas não conferem.");
+        return;
+      }
+      err = await updatePassword(password);
+    }
 
     setLoading(false);
 
@@ -26,6 +54,18 @@ export function AuthScreen() {
       setError(translateError(err));
     } else if (mode === "signup") {
       setDone(true);
+      setDoneMessage(
+        `Enviamos um link de confirmação para ${email}. Clique nele para ativar sua conta.`,
+      );
+    } else if (mode === "forgot") {
+      setDone(true);
+      setDoneMessage(
+        `Se o email ${email} existir, você receberá um link para redefinir sua senha.`,
+      );
+    } else if (mode === "reset") {
+      setDone(true);
+      setDoneMessage("Senha redefinida com sucesso. Agora você já pode entrar.");
+      setMode("signin");
     }
   };
 
@@ -56,14 +96,14 @@ export function AuthScreen() {
             <img src="/icon-192.png" alt="PromptLibrary" className="size-16 rounded-2xl" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">Verifique seu email</h1>
-          <p className="mt-2 text-sm text-muted-foreground">
-            Enviamos um link de confirmação para <strong>{email}</strong>. Clique nele para ativar
-            sua conta.
-          </p>
+          <p className="mt-2 text-sm text-muted-foreground">{doneMessage}</p>
           <button
             onClick={() => {
               setDone(false);
               setMode("signin");
+              setPassword("");
+              setConfirmPassword("");
+              setError(null);
             }}
             className="mt-6 text-sm text-primary hover:underline"
           >
@@ -83,43 +123,75 @@ export function AuthScreen() {
           </div>
           <h1 className="text-2xl font-bold text-foreground">PromptLibrary</h1>
           <p className="mt-2 text-sm text-muted-foreground">
-            {mode === "signin" ? "Entre na sua conta" : "Crie sua conta"}
+            {mode === "signin" && "Entre na sua conta"}
+            {mode === "signup" && "Crie sua conta"}
+            {mode === "forgot" && "Recupere o acesso à sua conta"}
+            {mode === "reset" && "Defina sua nova senha"}
           </p>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground" htmlFor="email">
-              Email
-            </label>
-            <input
-              id="email"
-              type="email"
-              required
-              autoComplete="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="voce@exemplo.com"
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
+          {mode !== "reset" && (
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-foreground" htmlFor="email">
+                Email
+              </label>
+              <input
+                id="email"
+                type="email"
+                required
+                autoComplete="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="voce@exemplo.com"
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+          )}
 
-          <div>
-            <label className="mb-1.5 block text-sm font-medium text-foreground" htmlFor="password">
-              Senha
-            </label>
-            <input
-              id="password"
-              type="password"
-              required
-              autoComplete={mode === "signin" ? "current-password" : "new-password"}
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              minLength={6}
-              className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-            />
-          </div>
+          {mode !== "forgot" && (
+            <div>
+              <label
+                className="mb-1.5 block text-sm font-medium text-foreground"
+                htmlFor="password"
+              >
+                {mode === "reset" ? "Nova senha" : "Senha"}
+              </label>
+              <input
+                id="password"
+                type="password"
+                required
+                autoComplete={mode === "signin" ? "current-password" : "new-password"}
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                minLength={6}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+          )}
+
+          {mode === "reset" && (
+            <div>
+              <label
+                className="mb-1.5 block text-sm font-medium text-foreground"
+                htmlFor="confirm-password"
+              >
+                Confirmar nova senha
+              </label>
+              <input
+                id="confirm-password"
+                type="password"
+                required
+                autoComplete="new-password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                minLength={6}
+                className="w-full rounded-xl border border-border bg-card px-4 py-3 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+              />
+            </div>
+          )}
 
           {error && (
             <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">
@@ -132,12 +204,16 @@ export function AuthScreen() {
             disabled={loading}
             className="w-full rounded-xl bg-primary px-4 py-3 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
           >
-            {loading ? "Aguarde…" : mode === "signin" ? "Entrar" : "Criar conta"}
+            {loading && "Aguarde…"}
+            {!loading && mode === "signin" && "Entrar"}
+            {!loading && mode === "signup" && "Criar conta"}
+            {!loading && mode === "forgot" && "Enviar link de recuperação"}
+            {!loading && mode === "reset" && "Salvar nova senha"}
           </button>
         </form>
 
         <p className="mt-5 text-center text-sm text-muted-foreground">
-          {mode === "signin" ? (
+          {mode === "signin" && (
             <>
               Não tem conta?{" "}
               <button
@@ -150,7 +226,8 @@ export function AuthScreen() {
                 Criar agora
               </button>
             </>
-          ) : (
+          )}
+          {mode === "signup" && (
             <>
               Já tem conta?{" "}
               <button
@@ -164,7 +241,36 @@ export function AuthScreen() {
               </button>
             </>
           )}
+          {mode === "forgot" && (
+            <>
+              Lembrou da senha?{" "}
+              <button
+                onClick={() => {
+                  setMode("signin");
+                  setError(null);
+                }}
+                className="text-primary hover:underline"
+              >
+                Voltar para login
+              </button>
+            </>
+          )}
         </p>
+
+        {mode === "signin" && (
+          <p className="mt-2 text-center text-sm">
+            <button
+              onClick={() => {
+                setMode("forgot");
+                setError(null);
+                setPassword("");
+              }}
+              className="text-primary hover:underline"
+            >
+              Esqueci minha senha
+            </button>
+          </p>
+        )}
       </div>
     </div>
   );

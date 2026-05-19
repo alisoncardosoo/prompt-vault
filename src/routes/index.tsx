@@ -379,6 +379,34 @@ function Page() {
                   Mostrar mais {filtered.length - 12} prompts
                 </button>
               )}
+
+              <div className="lg:hidden mt-4">
+                <div className="rounded-lg border border-border bg-card px-3 py-2 text-[11px] text-muted-foreground">
+                  <div className="flex items-center gap-1.5 justify-between">
+                    <div className="flex items-center gap-1.5">
+                      Publicado em:{" "}
+                      {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}
+                      <CheckCircle2
+                        className={cn(
+                          "size-3.5",
+                          isLikelyFresh ? "text-emerald-500" : "text-amber-500",
+                        )}
+                      />
+                      <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
+                        {buildStatusText}
+                      </span>
+                    </div>
+                    {!isLikelyFresh && (
+                      <button
+                        onClick={forceRefreshApp}
+                        className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
+                      >
+                        Atualizar
+                      </button>
+                    )}
+                  </div>
+                </div>
+              </div>
             </div>
           </main>
 
@@ -417,33 +445,6 @@ function Page() {
         ) : null}
       </Suspense>
       <Toaster position="top-center" />
-      <div
-        className="lg:hidden fixed bottom-16 inset-x-0 z-30 px-3 pb-2"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 4px)" }}
-      >
-        <div className="mx-auto max-w-md rounded-lg border border-border bg-card/95 backdrop-blur px-3 py-2 text-[11px] text-muted-foreground">
-          <div className="flex items-center gap-1.5 justify-between">
-            <div className="flex items-center gap-1.5">
-              Publicado em:{" "}
-              {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}
-              <CheckCircle2
-                className={cn("size-3.5", isLikelyFresh ? "text-emerald-500" : "text-amber-500")}
-              />
-              <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
-                {buildStatusText}
-              </span>
-            </div>
-            {!isLikelyFresh && (
-              <button
-                onClick={forceRefreshApp}
-                className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
-              >
-                Atualizar
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
       <MobileBottomNav />
     </div>
   );

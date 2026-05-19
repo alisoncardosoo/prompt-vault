@@ -8,6 +8,8 @@ type AuthCtx = {
   loading: boolean;
   signIn: (email: string, password: string) => Promise<string | null>;
   signUp: (email: string, password: string) => Promise<string | null>;
+  resetPasswordForEmail: (email: string) => Promise<string | null>;
+  updatePassword: (newPassword: string) => Promise<string | null>;
   signOut: () => Promise<void>;
 };
 
@@ -42,6 +44,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return error?.message ?? null;
   };
 
+  const resetPasswordForEmail = async (email: string): Promise<string | null> => {
+    const redirectTo = `${window.location.origin}${window.location.pathname}`;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+    return error?.message ?? null;
+  };
+
+  const updatePassword = async (newPassword: string): Promise<string | null> => {
+    const { error } = await supabase.auth.updateUser({ password: newPassword });
+    return error?.message ?? null;
+  };
+
   const signOut = async () => {
     await supabase.auth.signOut();
   };
@@ -54,6 +67,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         loading,
         signIn,
         signUp,
+        resetPasswordForEmail,
+        updatePassword,
         signOut,
       }}
     >

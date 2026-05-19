@@ -9,14 +9,21 @@ function extensionFromName(name: string): string {
   return name.slice(lastDot);
 }
 
-function dataUrlToBlob(dataUrl: string): Blob {
-  const match = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
-  if (!match) throw new Error("INVALID_DATA_URL");
-  const mime = match[1];
-  const binary = atob(match[2]);
-  const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mime });
+function extensionFromMime(mime: string): string {
+  const lower = mime.toLowerCase();
+  if (lower.includes("jpeg") || lower.includes("jpg")) return ".jpg";
+  if (lower.includes("png")) return ".png";
+  if (lower.includes("webp")) return ".webp";
+  if (lower.includes("gif")) return ".gif";
+  if (lower.includes("heic")) return ".heic";
+  return "";
+}
+
+async function dataUrlToBlob(dataUrl: string): Promise<Blob> {
+  // More reliable on mobile Safari than manual atob decoding for larger payloads.
+  const res = await fetch(dataUrl);
+  if (!res.ok) throw new Error("INVALID_DATA_URL");
+  return res.blob();
 }
 
 function makeStoragePath(
@@ -24,7 +31,7 @@ function makeStoragePath(
   promptId: string,
   attachment: Prompt["attachments"][number],
 ) {
-  const ext = extensionFromName(attachment.name);
+  const ext = extensionFromName(attachment.name) || extensionFromMime(attachment.type || "");
   return `${userId}/${promptId}/${attachment.id}${ext}`;
 }
 
@@ -40,48 +47,50 @@ export async function uploadPromptAttachments(
 ): Promise<Prompt["attachments"]> {
   if (attachments.length === 0) return [];
 
-  const uploaded = await Promise.all(
-    attachments.map(async (attachment) => {
-      if (attachment.url && attachment.path && !attachment.data) {
-        return {
-          id: attachment.id,
-          name: attachment.name,
-          size: attachment.size,
-          type: attachment.type,
-          path: attachment.path,
-          url: attachment.url,
-        };
-      }
+  const uploaded: Prompt["attachments"] = [];
 
-      if (!attachment.data) {
-        return {
-          id: attachment.id,
-          name: attachment.name,
-          size: attachment.size,
-          type: attachment.type,
-          path: attachment.path,
-          url: attachment.url,
-        };
-      }
-
-      const path = makeStoragePath(userId, promptId, attachment);
-      const blob = dataUrlToBlob(attachment.data);
-      const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).upload(path, blob, {
-        upsert: true,
-        contentType: attachment.type || blob.type || "application/octet-stream",
-      });
-      if (error) throw error;
-
-      return {
+  for (const attachment of attachments) {
+    if (attachment.url && attachment.path && !attachment.data) {
+      uploaded.push({
         id: attachment.id,
         name: attachment.name,
         size: attachment.size,
         type: attachment.type,
-        path,
-        url: publicUrlFor(path),
-      };
-    }),
-  );
+        path: attachment.path,
+        url: attachment.url,
+      });
+      continue;
+    }
+
+    if (!attachment.data) {
+      uploaded.push({
+        id: attachment.id,
+        name: attachment.name,
+        size: attachment.size,
+        type: attachment.type,
+        path: attachment.path,
+        url: attachment.url,
+      });
+      continue;
+    }
+
+    const path = makeStoragePath(userId, promptId, attachment);
+    const blob = await dataUrlToBlob(attachment.data);
+    const { error } = await supabase.storage.from(ATTACHMENTS_BUCKET).upload(path, blob, {
+      upsert: true,
+      contentType: attachment.type || blob.type || "application/octet-stream",
+    });
+    if (error) throw error;
+
+    uploaded.push({
+      id: attachment.id,
+      name: attachment.name,
+      size: attachment.size,
+      type: attachment.type || blob.type,
+      path,
+      url: publicUrlFor(path),
+    });
+  }
 
   return uploaded;
 }
