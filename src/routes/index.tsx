@@ -62,11 +62,13 @@ function DockItem({ icon: Icon, label, active, onClick }: DockItemProps) {
         active ? "text-neutral-900 dark:text-white" : "text-neutral-400 dark:text-neutral-500",
       )}
     >
-      <Icon
-        className="size-[22px] shrink-0"
-        strokeWidth={active ? 2.2 : 1.6}
-      />
-      <span className={cn("text-[10px] leading-none tracking-tight", active ? "font-semibold" : "font-normal")}>
+      <Icon className="size-[22px] shrink-0" strokeWidth={active ? 2.2 : 1.6} />
+      <span
+        className={cn(
+          "text-[10px] leading-none tracking-tight",
+          active ? "font-semibold" : "font-normal",
+        )}
+      >
         {label}
       </span>
     </button>
@@ -83,10 +85,30 @@ function MobileBottomNav() {
     >
       {/* Dock */}
       <div className="pointer-events-auto flex-1 flex items-center bg-white/45 dark:bg-neutral-900/45 backdrop-blur-2xl rounded-[24px] px-2 py-3 border border-white/70 dark:border-white/10 shadow-lg shadow-black/10">
-        <DockItem icon={LayoutGrid} label="Todos" active={view === "all"} onClick={() => setView("all")} />
-        <DockItem icon={Star} label="Favoritos" active={view === "favorites"} onClick={() => setView("favorites")} />
-        <DockItem icon={Clock} label="Recentes" active={view === "recent"} onClick={() => setView("recent")} />
-        <DockItem icon={Folder} label="Pastas" active={false} onClick={() => setSidebarOpen(true)} />
+        <DockItem
+          icon={LayoutGrid}
+          label="Todos"
+          active={view === "all"}
+          onClick={() => setView("all")}
+        />
+        <DockItem
+          icon={Star}
+          label="Favoritos"
+          active={view === "favorites"}
+          onClick={() => setView("favorites")}
+        />
+        <DockItem
+          icon={Clock}
+          label="Recentes"
+          active={view === "recent"}
+          onClick={() => setView("recent")}
+        />
+        <DockItem
+          icon={Folder}
+          label="Pastas"
+          active={false}
+          onClick={() => setSidebarOpen(true)}
+        />
       </div>
 
       {/* FAB — mesma altura do dock, cor sólida */}
