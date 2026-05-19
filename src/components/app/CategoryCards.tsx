@@ -8,33 +8,39 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-const styles: Record<string, { bg: string; icon: typeof Folder; iconBg: string }> = {
-  amber: {
-    bg: "bg-cat-amber",
-    icon: Folder,
-    iconBg: "bg-amber-200/70 text-amber-700 dark:bg-amber-300/15 dark:text-amber-200",
-  },
-  lavender: {
-    bg: "bg-cat-lavender",
-    icon: FileCode2,
-    iconBg: "bg-violet-200/70 text-violet-700 dark:bg-violet-300/15 dark:text-violet-200",
-  },
-  sky: {
-    bg: "bg-cat-sky",
-    icon: Pencil,
-    iconBg: "bg-sky-200/70 text-sky-700 dark:bg-sky-300/15 dark:text-sky-200",
-  },
-  mint: {
-    bg: "bg-cat-mint",
-    icon: Box,
-    iconBg: "bg-emerald-200/70 text-emerald-700 dark:bg-emerald-300/15 dark:text-emerald-200",
-  },
-  rose: {
-    bg: "bg-cat-rose",
-    icon: User,
-    iconBg: "bg-rose-200/70 text-rose-700 dark:bg-rose-300/15 dark:text-rose-200",
-  },
-};
+const styles: Record<string, { bg: string; bgCard: string; icon: typeof Folder; iconBg: string }> =
+  {
+    amber: {
+      bg: "bg-cat-amber",
+      bgCard: "bg-cat-amber/75",
+      icon: Folder,
+      iconBg: "bg-white/40 text-amber-800 dark:bg-amber-300/15 dark:text-amber-200",
+    },
+    lavender: {
+      bg: "bg-cat-lavender",
+      bgCard: "bg-cat-lavender/75",
+      icon: FileCode2,
+      iconBg: "bg-white/40 text-violet-800 dark:bg-violet-300/15 dark:text-violet-200",
+    },
+    sky: {
+      bg: "bg-cat-sky",
+      bgCard: "bg-cat-sky/75",
+      icon: Pencil,
+      iconBg: "bg-white/40 text-sky-800 dark:bg-sky-300/15 dark:text-sky-200",
+    },
+    mint: {
+      bg: "bg-cat-mint",
+      bgCard: "bg-cat-mint/75",
+      icon: Box,
+      iconBg: "bg-white/40 text-emerald-800 dark:bg-emerald-300/15 dark:text-emerald-200",
+    },
+    rose: {
+      bg: "bg-cat-rose",
+      bgCard: "bg-cat-rose/75",
+      icon: User,
+      iconBg: "bg-white/40 text-rose-800 dark:bg-rose-300/15 dark:text-rose-200",
+    },
+  };
 
 export function CategoryCards() {
   const { categories, prompts, setView, renameCategory, setCategoryColor, deleteCategory } =
@@ -49,7 +55,7 @@ export function CategoryCards() {
           <button
             key={c.id}
             onClick={() => setView("category", c.id)}
-            className={`${s.bg} rounded-xl p-4 text-left hover:shadow-md active:scale-[0.98] transition-all min-h-[120px] flex flex-col justify-between group relative`}
+            className={`${s.bgCard} backdrop-blur-sm border border-white/30 rounded-xl p-4 text-left hover:shadow-lg active:scale-[0.98] transition-all min-h-[120px] flex flex-col justify-between group relative`}
           >
             <div className="flex items-start justify-between">
               <div className={`size-9 rounded-lg flex items-center justify-center ${s.iconBg}`}>
