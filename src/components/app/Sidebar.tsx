@@ -50,11 +50,11 @@ function NavItem({ active, onClick, icon: Icon, label, count, dot, collapsed }: 
     <button
       onClick={onClick}
       className={cn(
-        "w-full flex items-center rounded-lg text-sm transition-colors min-h-[44px]",
+        "w-full flex items-center rounded-xl text-sm transition-colors min-h-[44px]",
         collapsed ? "justify-center px-0 py-2" : "gap-3 px-3 py-2.5",
         active
-          ? "bg-primary/20 text-foreground font-medium"
-          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/60 active:bg-sidebar-accent",
+          ? "bg-primary/15 text-foreground font-medium"
+          : "text-sidebar-foreground/80 hover:bg-sidebar-accent/40 active:bg-sidebar-accent/60",
       )}
     >
       {Icon && <Icon className="size-4 shrink-0" />}
@@ -444,8 +444,8 @@ function SidebarInner({
       </div>
 
       {!collapsed && (
-        <div className="shrink-0 border-t border-sidebar-border px-3 py-3">
-          <div className="rounded-xl border border-sidebar-border/80 bg-background/65 p-3 space-y-2">
+        <div className="shrink-0 border-t border-border/30 px-3 py-3">
+          <div className="rounded-2xl border border-border/40 bg-background/50 backdrop-blur-sm p-3 space-y-2">
             <p className="text-xs text-muted-foreground">Publicado em: 18/05/2026, 18:44</p>
             <p className="text-xs text-muted-foreground">Pode haver versão mais nova</p>
             <button
@@ -461,7 +461,7 @@ function SidebarInner({
 
       {/* Expand button — only shown when collapsed, desktop only */}
       {!sidebarOpen && collapsed && (
-        <div className="border-t border-sidebar-border shrink-0 flex justify-center p-3">
+        <div className="border-t border-border/30 shrink-0 flex justify-center p-3">
           <Tooltip>
             <TooltipTrigger asChild>
               <button
@@ -487,7 +487,7 @@ export function AppSidebar() {
       {/* Desktop: always-visible sidebar — collapses to icon-only */}
       <aside
         className={cn(
-          "hidden lg:flex shrink-0 bg-sidebar border-r border-sidebar-border flex-col h-screen transition-all duration-300 overflow-hidden",
+          "hidden lg:flex shrink-0 bg-sidebar/80 backdrop-blur-2xl border-r border-border/30 flex-col h-screen transition-all duration-300 overflow-hidden",
           sidebarCollapsed ? "w-16" : "w-64",
         )}
       >
@@ -498,7 +498,7 @@ export function AppSidebar() {
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent
           side="left"
-          className="p-0 w-72 bg-sidebar border-sidebar-border flex flex-col"
+          className="p-0 w-72 bg-sidebar/80 backdrop-blur-2xl border-sidebar-border/30 flex flex-col"
         >
           <SheetTitle className="sr-only">Navegação da biblioteca</SheetTitle>
           <SheetDescription className="sr-only">

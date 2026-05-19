@@ -24,7 +24,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-14 lg:h-14 px-3 lg:px-4 flex items-center gap-2 lg:gap-3 border-b border-border bg-background/80 backdrop-blur shrink-0">
+    <header className="h-16 lg:h-14 px-4 lg:px-5 flex items-center gap-2 lg:gap-3 bg-background/70 backdrop-blur-xl shadow-sm shadow-black/[0.04] shrink-0">
       {/* Mobile hamburger — 44px touch target */}
       <Button
         variant="ghost"
@@ -45,7 +45,7 @@ export function AppHeader() {
           onChange={(e) => setSearch(e.target.value)}
           onFocus={() => setCommandOpen(false)}
           placeholder="Buscar prompts, tags, conteúdo..."
-          className="w-full bg-card border border-border rounded-lg pl-9 pr-3 lg:pr-14 h-11 lg:h-9 text-sm outline-none focus:ring-2 focus:ring-primary/40"
+          className="w-full bg-muted/50 border border-border/50 rounded-xl pl-9 pr-3 lg:pr-14 h-11 lg:h-9 text-sm outline-none focus:ring-2 focus:ring-primary/30 transition-all"
           style={{ fontSize: "16px" }}
         />
         <kbd className="hidden lg:block absolute right-3 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground border border-border rounded px-1.5 py-0.5 bg-muted">

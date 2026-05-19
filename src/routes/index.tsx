@@ -45,30 +45,29 @@ const ImageImportDialog = lazy(() =>
   })),
 );
 
-type BottomNavItemProps = {
+type DockItemProps = {
   icon: typeof Star;
   label: string;
   active: boolean;
   onClick: () => void;
 };
 
-function BottomNavItem({ icon: Icon, label, active, onClick }: BottomNavItemProps) {
+function DockItem({ icon: Icon, label, active, onClick }: DockItemProps) {
   return (
     <button
       onClick={onClick}
+      aria-label={label}
       className={cn(
-        "flex flex-col items-center justify-center gap-0.5 px-3 py-1.5 rounded-xl min-w-[56px] min-h-[44px] transition-all active:scale-95",
-        active ? "text-primary" : "text-muted-foreground",
+        "flex items-center justify-center transition-all duration-200 active:scale-90",
+        active
+          ? "gap-1.5 bg-white dark:bg-neutral-100 text-neutral-900 rounded-full px-3.5 py-2 shadow-sm"
+          : "text-neutral-500 dark:text-neutral-400 px-3 py-2",
       )}
     >
-      {/* Active pill indicator */}
-      <div className="relative flex items-center justify-center">
-        {active && <span className="absolute -inset-y-1 -inset-x-3 rounded-full bg-primary/12" />}
-        <Icon className="size-5 relative z-10" />
-      </div>
-      <span className={cn("text-[10px] leading-tight", active ? "font-semibold" : "font-medium")}>
-        {label}
-      </span>
+      <Icon className={cn("shrink-0", active ? "size-[18px]" : "size-5")} />
+      {active && (
+        <span className="text-[13px] font-semibold leading-none whitespace-nowrap">{label}</span>
+      )}
     </button>
   );
 }
@@ -78,42 +77,42 @@ function MobileBottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-card/95 backdrop-blur-xl border-t border-border"
-      style={{ paddingBottom: "env(safe-area-inset-bottom, 0px)" }}
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex justify-center pointer-events-none"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
     >
-      <div className="flex items-center justify-around px-1 h-16">
-        <BottomNavItem
+      <div className="pointer-events-auto flex items-center gap-0.5 bg-neutral-200/80 dark:bg-neutral-800/80 backdrop-blur-2xl rounded-full px-2 py-2 shadow-2xl shadow-black/20 border border-white/60 dark:border-white/10">
+        <DockItem
           icon={LayoutGrid}
           label="Todos"
           active={view === "all"}
           onClick={() => setView("all")}
         />
-        <BottomNavItem
+        <DockItem
           icon={Star}
           label="Favoritos"
           active={view === "favorites"}
           onClick={() => setView("favorites")}
         />
-        {/* FAB */}
-        <button
-          onClick={() => openEditor()}
-          className="size-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg hover:bg-primary/90 active:scale-95 transition-all"
-          aria-label="Novo prompt"
-        >
-          <Plus className="size-5" />
-        </button>
-        <BottomNavItem
+        <DockItem
           icon={Clock}
           label="Recentes"
           active={view === "recent"}
           onClick={() => setView("recent")}
         />
-        <BottomNavItem
+        <DockItem
           icon={Folder}
-          label="Menu"
+          label="Pastas"
           active={false}
           onClick={() => setSidebarOpen(true)}
         />
+        {/* FAB */}
+        <button
+          onClick={() => openEditor()}
+          aria-label="Novo prompt"
+          className="ml-1 size-11 rounded-full bg-amber-400 hover:bg-amber-300 active:scale-90 text-neutral-900 flex items-center justify-center shadow-lg shadow-amber-400/40 transition-all duration-200"
+        >
+          <Plus className="size-5" strokeWidth={2.5} />
+        </button>
       </div>
     </nav>
   );
@@ -264,7 +263,7 @@ function Page() {
         <AppHeader />
 
         <div className="flex-1 flex min-h-0">
-          <main className="flex-1 overflow-y-auto overscroll-contain px-4 md:px-6 lg:px-8 py-4 lg:py-6">
+          <main className="flex-1 overflow-y-auto overscroll-contain px-5 md:px-7 lg:px-10 py-5 lg:py-7">
             <div className="max-w-5xl pb-28 lg:pb-4">
               {!heading ? (
                 <>
@@ -278,12 +277,14 @@ function Page() {
                       </p>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex bg-card border border-border rounded-lg p-0.5">
+                      <div className="flex bg-muted/60 rounded-xl p-0.5">
                         <button
                           onClick={() => setViewMode("grid")}
                           className={cn(
-                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded transition-colors",
-                            viewMode === "grid" ? "bg-muted" : "text-muted-foreground",
+                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
+                            viewMode === "grid"
+                              ? "bg-card shadow-sm text-foreground"
+                              : "text-muted-foreground",
                           )}
                         >
                           <LayoutGrid className="size-4" />
@@ -291,8 +292,10 @@ function Page() {
                         <button
                           onClick={() => setViewMode("list")}
                           className={cn(
-                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded transition-colors",
-                            viewMode === "list" ? "bg-muted" : "text-muted-foreground",
+                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
+                            viewMode === "list"
+                              ? "bg-card shadow-sm text-foreground"
+                              : "text-muted-foreground",
                           )}
                         >
                           <List className="size-4" />
@@ -300,7 +303,7 @@ function Page() {
                       </div>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <button className="hidden sm:flex items-center gap-1.5 bg-card border border-border rounded-lg px-3 py-1.5 text-sm">
+                          <button className="hidden sm:flex items-center gap-1.5 bg-transparent hover:bg-muted/60 rounded-xl px-3 py-1.5 text-sm transition-colors">
                             {SORT_LABELS[sortBy]} <ChevronDown className="size-3.5" />
                           </button>
                         </DropdownMenuTrigger>
@@ -374,14 +377,14 @@ function Page() {
               {!showAll && filtered.length > 12 && (
                 <button
                   onClick={() => setShowAll(true)}
-                  className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card border border-border rounded-xl hover:bg-muted min-h-[48px]"
+                  className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm rounded-2xl shadow-sm hover:bg-card/80 min-h-[48px] transition-all duration-150"
                 >
                   Mostrar mais {filtered.length - 12} prompts
                 </button>
               )}
 
               <div className="lg:hidden mt-4">
-                <div className="rounded-lg border border-border bg-card px-3 py-2 text-[11px] text-muted-foreground">
+                <div className="rounded-2xl border border-border/30 bg-card/50 backdrop-blur-sm px-3 py-2 text-[11px] text-muted-foreground">
                   <div className="flex items-center gap-1.5 justify-between">
                     <div className="flex items-center gap-1.5">
                       Publicado em:{" "}
@@ -416,7 +419,7 @@ function Page() {
         </div>
 
         {/* Desktop-only footer */}
-        <footer className="hidden lg:flex h-8 px-4 items-center justify-between text-[11px] text-muted-foreground border-t border-border bg-card shrink-0">
+        <footer className="hidden lg:flex h-8 px-4 items-center justify-between text-[11px] text-muted-foreground border-t border-border/30 bg-background/50 shrink-0">
           <div className="flex items-center gap-1.5">
             Publicado em:{" "}
             {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}

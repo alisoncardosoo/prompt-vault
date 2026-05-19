@@ -165,10 +165,10 @@ export function PromptCard({
       <article
         {...sharedProps}
         className={cn(
-          "text-left bg-card border border-border rounded-xl px-4 py-3 hover:shadow-md transition-all flex items-center gap-4 min-h-[64px] active:bg-muted/50",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-          selected && "ring-2 ring-primary/50 border-primary/30",
-          inTrash && "opacity-75",
+          "text-left bg-card/90 rounded-[20px] px-5 py-3.5 shadow-sm shadow-black/[0.06] hover:shadow-md hover:shadow-black/[0.10] hover:-translate-y-0.5 transition-all duration-200 flex items-center gap-4 min-h-[68px] active:scale-[0.99] active:shadow-sm",
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+          selected && "ring-2 ring-primary/40",
+          inTrash && "opacity-70",
         )}
       >
         <div className="flex-1 min-w-0">
@@ -200,10 +200,10 @@ export function PromptCard({
     <article
       {...sharedProps}
       className={cn(
-        "text-left bg-card border border-border rounded-xl p-4 hover:shadow-md transition-all flex flex-col gap-2.5 min-h-[180px] active:bg-muted/30",
-        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/50",
-        selected && "ring-2 ring-primary/50 border-primary/30",
-        inTrash && "opacity-75",
+        "text-left bg-card/90 rounded-[20px] p-5 shadow-sm shadow-black/[0.06] hover:shadow-md hover:shadow-black/[0.10] hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-3 min-h-[180px] active:scale-[0.99] active:shadow-sm",
+        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+        selected && "ring-2 ring-primary/40",
+        inTrash && "opacity-70",
       )}
     >
       <div className="flex items-start justify-between gap-2">

@@ -55,10 +55,10 @@ export function CategoryCards() {
           <button
             key={c.id}
             onClick={() => setView("category", c.id)}
-            className={`${s.bgCard} backdrop-blur-sm border border-white/30 rounded-xl p-4 text-left hover:shadow-lg active:scale-[0.98] transition-all min-h-[120px] flex flex-col justify-between group relative`}
+            className={`${s.bgCard} backdrop-blur-xl border border-white/20 rounded-[20px] p-5 text-left hover:shadow-lg hover:shadow-black/[0.08] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 min-h-[128px] flex flex-col justify-between group relative`}
           >
             <div className="flex items-start justify-between">
-              <div className={`size-9 rounded-lg flex items-center justify-center ${s.iconBg}`}>
+              <div className={`size-10 rounded-xl flex items-center justify-center ${s.iconBg}`}>
                 <Icon className="size-4.5" />
               </div>
               {/* Always visible on mobile, hover-only on desktop */}
