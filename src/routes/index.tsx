@@ -77,11 +77,11 @@ function MobileBottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-end gap-3 pointer-events-none px-3"
-      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch gap-3 pointer-events-none px-3"
+      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)" }}
     >
-      {/* Dock — ocupa toda a largura disponível */}
-      <div className="pointer-events-auto flex-1 flex items-center justify-around bg-neutral-100/35 dark:bg-neutral-900/35 backdrop-blur-3xl rounded-full px-2 py-1.5 border border-white/50 dark:border-white/10 shadow-xl shadow-black/15">
+      {/* Dock — altura Apple HIG (~66px), ocupa toda a largura */}
+      <div className="pointer-events-auto flex-1 flex items-center justify-around bg-neutral-100/35 dark:bg-neutral-900/35 backdrop-blur-3xl rounded-[22px] px-3 py-3.5 border border-white/50 dark:border-white/10 shadow-xl shadow-black/15">
         <DockItem
           icon={LayoutGrid}
           label="Todos"
@@ -108,20 +108,11 @@ function MobileBottomNav() {
         />
       </div>
 
-      {/* FAB flutuante fora do dock — estilo Liquid Glass */}
+      {/* FAB — cor sólida, mesma altura do dock */}
       <button
         onClick={() => openEditor()}
         aria-label="Novo prompt"
-        className="pointer-events-auto shrink-0 size-14 rounded-full flex items-center justify-center text-neutral-900 active:scale-90 transition-all duration-200"
-        style={{
-          background:
-            "radial-gradient(ellipse at 40% 30%, rgba(253,224,71,0.92) 0%, rgba(251,191,36,0.85) 60%, rgba(245,158,11,0.80) 100%)",
-          backdropFilter: "blur(20px) saturate(1.8)",
-          WebkitBackdropFilter: "blur(20px) saturate(1.8)",
-          border: "1px solid rgba(255,255,255,0.55)",
-          boxShadow:
-            "inset 0 1px 1.5px rgba(255,255,255,0.55), 0 8px 28px rgba(251,191,36,0.45), 0 2px 8px rgba(0,0,0,0.12)",
-        }}
+        className="pointer-events-auto shrink-0 aspect-square rounded-[22px] bg-amber-400 hover:bg-amber-300 active:scale-95 text-neutral-900 flex items-center justify-center shadow-lg shadow-amber-400/40 transition-all duration-200"
       >
         <Plus className="size-6" strokeWidth={2.5} />
       </button>
