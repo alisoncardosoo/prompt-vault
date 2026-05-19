@@ -385,7 +385,9 @@ function Page() {
                   <div className="flex items-center gap-1.5 justify-between">
                     <div className="flex items-center gap-1.5">
                       Publicado em:{" "}
-                      {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}
+                      {isBuildTimeValid
+                        ? formatBuildTime(__APP_BUILD_TIME__)
+                        : "horário indisponível"}
                       <CheckCircle2
                         className={cn(
                           "size-3.5",
