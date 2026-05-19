@@ -60,8 +60,8 @@ function DockItem({ icon: Icon, label, active, onClick }: DockItemProps) {
       className={cn(
         "flex items-center justify-center transition-all duration-200 active:scale-90",
         active
-          ? "gap-1.5 bg-white dark:bg-neutral-100 text-neutral-900 rounded-full px-3.5 py-2 shadow-sm"
-          : "text-neutral-500 dark:text-neutral-400 px-3 py-2",
+          ? "gap-1.5 bg-white/80 dark:bg-white/15 text-neutral-900 dark:text-neutral-100 rounded-full px-3.5 py-2 shadow-sm backdrop-blur-sm"
+          : "text-neutral-600 dark:text-neutral-300 px-3 py-2",
       )}
     >
       <Icon className={cn("shrink-0", active ? "size-[18px]" : "size-5")} />
@@ -77,10 +77,11 @@ function MobileBottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex justify-center pointer-events-none"
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-end gap-3 pointer-events-none px-3"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
     >
-      <div className="pointer-events-auto flex items-center gap-0.5 bg-neutral-200/80 dark:bg-neutral-800/80 backdrop-blur-2xl rounded-full px-2 py-2 shadow-2xl shadow-black/20 border border-white/60 dark:border-white/10">
+      {/* Dock — ocupa toda a largura disponível */}
+      <div className="pointer-events-auto flex-1 flex items-center justify-around bg-neutral-100/35 dark:bg-neutral-900/35 backdrop-blur-3xl rounded-full px-2 py-1.5 border border-white/50 dark:border-white/10 shadow-xl shadow-black/15">
         <DockItem
           icon={LayoutGrid}
           label="Todos"
@@ -105,15 +106,25 @@ function MobileBottomNav() {
           active={false}
           onClick={() => setSidebarOpen(true)}
         />
-        {/* FAB */}
-        <button
-          onClick={() => openEditor()}
-          aria-label="Novo prompt"
-          className="ml-1 size-11 rounded-full bg-amber-400 hover:bg-amber-300 active:scale-90 text-neutral-900 flex items-center justify-center shadow-lg shadow-amber-400/40 transition-all duration-200"
-        >
-          <Plus className="size-5" strokeWidth={2.5} />
-        </button>
       </div>
+
+      {/* FAB flutuante fora do dock — estilo Liquid Glass */}
+      <button
+        onClick={() => openEditor()}
+        aria-label="Novo prompt"
+        className="pointer-events-auto shrink-0 size-14 rounded-full flex items-center justify-center text-neutral-900 active:scale-90 transition-all duration-200"
+        style={{
+          background:
+            "radial-gradient(ellipse at 40% 30%, rgba(253,224,71,0.92) 0%, rgba(251,191,36,0.85) 60%, rgba(245,158,11,0.80) 100%)",
+          backdropFilter: "blur(20px) saturate(1.8)",
+          WebkitBackdropFilter: "blur(20px) saturate(1.8)",
+          border: "1px solid rgba(255,255,255,0.55)",
+          boxShadow:
+            "inset 0 1px 1.5px rgba(255,255,255,0.55), 0 8px 28px rgba(251,191,36,0.45), 0 2px 8px rgba(0,0,0,0.12)",
+        }}
+      >
+        <Plus className="size-6" strokeWidth={2.5} />
+      </button>
     </nav>
   );
 }
