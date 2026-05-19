@@ -58,16 +58,17 @@ function DockItem({ icon: Icon, label, active, onClick }: DockItemProps) {
       onClick={onClick}
       aria-label={label}
       className={cn(
-        "flex items-center justify-center transition-all duration-200 active:scale-90",
-        active
-          ? "gap-1.5 bg-white/80 dark:bg-white/15 text-neutral-900 dark:text-neutral-100 rounded-full px-3.5 py-2 shadow-sm backdrop-blur-sm"
-          : "text-neutral-600 dark:text-neutral-300 px-3 py-2",
+        "flex flex-col items-center justify-center gap-[5px] flex-1 py-1 transition-all duration-200 active:scale-90",
+        active ? "text-neutral-900 dark:text-white" : "text-neutral-400 dark:text-neutral-500",
       )}
     >
-      <Icon className={cn("shrink-0", active ? "size-[18px]" : "size-5")} />
-      {active && (
-        <span className="text-[13px] font-semibold leading-none whitespace-nowrap">{label}</span>
-      )}
+      <Icon
+        className="size-[22px] shrink-0"
+        strokeWidth={active ? 2.2 : 1.6}
+      />
+      <span className={cn("text-[10px] leading-none tracking-tight", active ? "font-semibold" : "font-normal")}>
+        {label}
+      </span>
     </button>
   );
 }
@@ -77,42 +78,22 @@ function MobileBottomNav() {
 
   return (
     <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch gap-3 pointer-events-none px-3"
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch gap-2.5 pointer-events-none px-4"
       style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)" }}
     >
-      {/* Dock — altura Apple HIG (~66px), ocupa toda a largura */}
-      <div className="pointer-events-auto flex-1 flex items-center justify-around bg-neutral-100/35 dark:bg-neutral-900/35 backdrop-blur-3xl rounded-[22px] px-3 py-3.5 border border-white/50 dark:border-white/10 shadow-xl shadow-black/15">
-        <DockItem
-          icon={LayoutGrid}
-          label="Todos"
-          active={view === "all"}
-          onClick={() => setView("all")}
-        />
-        <DockItem
-          icon={Star}
-          label="Favoritos"
-          active={view === "favorites"}
-          onClick={() => setView("favorites")}
-        />
-        <DockItem
-          icon={Clock}
-          label="Recentes"
-          active={view === "recent"}
-          onClick={() => setView("recent")}
-        />
-        <DockItem
-          icon={Folder}
-          label="Pastas"
-          active={false}
-          onClick={() => setSidebarOpen(true)}
-        />
+      {/* Dock */}
+      <div className="pointer-events-auto flex-1 flex items-center bg-white/45 dark:bg-neutral-900/45 backdrop-blur-2xl rounded-[24px] px-2 py-3 border border-white/70 dark:border-white/10 shadow-lg shadow-black/10">
+        <DockItem icon={LayoutGrid} label="Todos" active={view === "all"} onClick={() => setView("all")} />
+        <DockItem icon={Star} label="Favoritos" active={view === "favorites"} onClick={() => setView("favorites")} />
+        <DockItem icon={Clock} label="Recentes" active={view === "recent"} onClick={() => setView("recent")} />
+        <DockItem icon={Folder} label="Pastas" active={false} onClick={() => setSidebarOpen(true)} />
       </div>
 
-      {/* FAB — cor sólida, mesma altura do dock */}
+      {/* FAB — mesma altura do dock, cor sólida */}
       <button
         onClick={() => openEditor()}
         aria-label="Novo prompt"
-        className="pointer-events-auto shrink-0 aspect-square rounded-[22px] bg-amber-400 hover:bg-amber-300 active:scale-95 text-neutral-900 flex items-center justify-center shadow-lg shadow-amber-400/40 transition-all duration-200"
+        className="pointer-events-auto shrink-0 w-[62px] rounded-[24px] bg-amber-400 hover:bg-amber-300 active:scale-95 text-neutral-900 flex items-center justify-center shadow-lg shadow-amber-400/35 transition-all duration-200"
       >
         <Plus className="size-6" strokeWidth={2.5} />
       </button>
