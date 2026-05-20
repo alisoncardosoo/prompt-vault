@@ -10,6 +10,7 @@ import {
   Trash2,
   Search,
   Plus,
+  Sparkles,
   Hash,
   FileText,
   Home,
@@ -55,7 +56,7 @@ const ImageImportDialog = lazy(() =>
 type MobileSection = "home" | "todos" | "pastas" | "tags";
 
 function MobileBottomBar() {
-  const { openEditor, search, setSearch } = usePromptStore();
+  const { openEditor, search, setSearch, setImageImportOpen } = usePromptStore();
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/90 dark:bg-background/95 backdrop-blur-xl border-t border-border/30">
@@ -69,6 +70,14 @@ function MobileBottomBar() {
           className="w-11 h-11 shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground active:scale-95 transition-transform shadow-sm"
         >
           <Plus className="size-5" strokeWidth={2.5} />
+        </button>
+
+        <button
+          onClick={() => setImageImportOpen(true)}
+          aria-label="Importar com IA"
+          className="w-11 h-11 shrink-0 rounded-full bg-violet-500 flex items-center justify-center text-white active:scale-95 transition-transform shadow-sm"
+        >
+          <Sparkles className="size-4.5" />
         </button>
 
         <div className="flex-1 relative">
@@ -178,6 +187,7 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
   const [favoritesOpen, setFavoritesOpen] = useState(true);
   const [recentsOpen, setRecentsOpen] = useState(true);
   const [recentsViewMode, setRecentsViewMode] = useState<"list" | "cards">("list");
+  const [todosViewMode, setTodosViewMode] = useState<"list" | "cards">("list");
 
   const recentPrompts = useMemo(
     () =>
@@ -250,9 +260,39 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
       .sort((a, b) => b.updatedAt - a.updatedAt);
     return (
       <div className="lg:hidden pt-2">
+        <div className="flex items-center justify-between px-5 pb-2">
+          <span className="text-sm font-semibold text-foreground">
+            Todos os prompts
+            <span className="text-xs text-muted-foreground font-normal ml-1.5">
+              ({allPrompts.length})
+            </span>
+          </span>
+          <div className="flex items-center">
+            <button
+              onClick={() => setTodosViewMode("list")}
+              className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                todosViewMode === "list" ? "text-foreground" : "text-muted-foreground",
+              )}
+              aria-label="Visualização em lista"
+            >
+              <List className="size-3.5" />
+            </button>
+            <button
+              onClick={() => setTodosViewMode("cards")}
+              className={cn(
+                "p-1.5 rounded-lg transition-colors",
+                todosViewMode === "cards" ? "text-foreground" : "text-muted-foreground",
+              )}
+              aria-label="Visualização em cartões"
+            >
+              <LayoutGrid className="size-3.5" />
+            </button>
+          </div>
+        </div>
         {allPrompts.length === 0 ? (
           <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum prompt ainda.</p>
-        ) : (
+        ) : todosViewMode === "list" ? (
           allPrompts.map((p) => (
             <MobileListRow
               key={p.id}
@@ -263,6 +303,31 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
               onClick={() => setSelected(p.id)}
             />
           ))
+        ) : (
+          <div className="px-5 grid grid-cols-2 gap-2 pb-3">
+            {allPrompts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSelected(p.id)}
+                className="text-left bg-card/60 border border-border/30 rounded-xl p-3 active:scale-[0.98] transition-transform"
+              >
+                <p className="text-[13px] font-medium line-clamp-2 text-foreground">{p.title}</p>
+                {p.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {p.tags.slice(0, 2).map((t) => (
+                      <span
+                        key={t}
+                        className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full"
+                      >
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground mt-1.5">{timeAgo(p.updatedAt)}</p>
+              </button>
+            ))}
+          </div>
         )}
       </div>
     );
