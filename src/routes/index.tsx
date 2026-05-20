@@ -160,9 +160,7 @@ function MobileListRow({ emoji, title, meta, onClick, isFavorite }: MobileListRo
       </div>
       <span className="text-[15px] flex-1 truncate text-foreground">{title}</span>
       {isFavorite && <Star className="size-3.5 fill-primary text-primary shrink-0" />}
-      {meta && (
-        <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{meta}</span>
-      )}
+      {meta && <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{meta}</span>}
     </button>
   );
 }
@@ -249,9 +247,7 @@ function MobileHomeContent() {
                   📝
                 </div>
                 <p className="text-[13px] font-medium leading-tight line-clamp-2">{p.title}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">
-                  {timeAgo(p.lastUsedAt)}
-                </p>
+                <p className="text-[11px] text-muted-foreground mt-1">{timeAgo(p.lastUsedAt)}</p>
               </button>
             ))}
           </div>
@@ -465,162 +461,167 @@ function Page() {
           <main
             className={cn(
               "flex-1 overflow-y-auto overscroll-contain py-5 lg:py-7",
-              view === "all" && !search
-                ? "px-0 md:px-7 lg:px-10"
-                : "px-5 md:px-7 lg:px-10",
+              view === "all" && !search ? "px-0 md:px-7 lg:px-10" : "px-5 md:px-7 lg:px-10",
             )}
           >
             <div className="max-w-5xl pb-24 lg:pb-4">
               {view === "all" && !search && <MobileHomeContent />}
 
               <div className={cn(view === "all" && !search ? "hidden lg:block" : "")}>
-              {!heading ? (
-                <>
-                  <div className="flex items-start justify-between mb-5 lg:mb-6 gap-3">
+                {!heading ? (
+                  <>
+                    <div className="flex items-start justify-between mb-5 lg:mb-6 gap-3">
+                      <div>
+                        <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2 flex-wrap">
+                          {greeting}, {userName} <span className="text-xl lg:text-2xl">👋</span>
+                        </h1>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          {prompts.length} prompts em {categories.length} pastas.
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex bg-muted/60 rounded-xl p-0.5">
+                          <button
+                            onClick={() => setViewMode("grid")}
+                            className={cn(
+                              "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
+                              viewMode === "grid"
+                                ? "bg-card shadow-sm text-foreground"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            <LayoutGrid className="size-4" />
+                          </button>
+                          <button
+                            onClick={() => setViewMode("list")}
+                            className={cn(
+                              "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
+                              viewMode === "list"
+                                ? "bg-card shadow-sm text-foreground"
+                                : "text-muted-foreground",
+                            )}
+                          >
+                            <List className="size-4" />
+                          </button>
+                        </div>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <button className="hidden sm:flex items-center gap-1.5 bg-transparent hover:bg-muted/60 rounded-xl px-3 py-1.5 text-sm transition-colors">
+                              {SORT_LABELS[sortBy]} <ChevronDown className="size-3.5" />
+                            </button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            {(Object.keys(SORT_LABELS) as (keyof typeof SORT_LABELS)[]).map(
+                              (key) => (
+                                <DropdownMenuItem
+                                  key={key}
+                                  onClick={() => setSortBy(key)}
+                                  className={sortBy === key ? "font-medium text-primary" : ""}
+                                >
+                                  {SORT_LABELS[key]}
+                                </DropdownMenuItem>
+                              ),
+                            )}
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </div>
+                    </div>
+
+                    <div className="hidden md:block">
+                      <CategoryCards />
+                    </div>
+
+                    <div className="mt-6 lg:mt-8 mb-4">
+                      <h2 className="text-base font-semibold">Prompts recentes</h2>
+                    </div>
+                  </>
+                ) : (
+                  <div className="mb-5 lg:mb-6 flex items-start justify-between gap-3">
                     <div>
-                      <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2 flex-wrap">
-                        {greeting}, {userName} <span className="text-xl lg:text-2xl">👋</span>
+                      <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2">
+                        {view === "trash" && <Trash2 className="size-5 text-muted-foreground" />}
+                        {heading}
                       </h1>
                       <p className="text-sm text-muted-foreground mt-1">
-                        {prompts.length} prompts em {categories.length} pastas.
+                        {view === "trash"
+                          ? `${filtered.length} itens · excluídos automaticamente após 30 dias`
+                          : `${filtered.length} prompts`}
                       </p>
                     </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <div className="flex bg-muted/60 rounded-xl p-0.5">
-                        <button
-                          onClick={() => setViewMode("grid")}
-                          className={cn(
-                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
-                            viewMode === "grid"
-                              ? "bg-card shadow-sm text-foreground"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          <LayoutGrid className="size-4" />
-                        </button>
-                        <button
-                          onClick={() => setViewMode("list")}
-                          className={cn(
-                            "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
-                            viewMode === "list"
-                              ? "bg-card shadow-sm text-foreground"
-                              : "text-muted-foreground",
-                          )}
-                        >
-                          <List className="size-4" />
-                        </button>
-                      </div>
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <button className="hidden sm:flex items-center gap-1.5 bg-transparent hover:bg-muted/60 rounded-xl px-3 py-1.5 text-sm transition-colors">
-                            {SORT_LABELS[sortBy]} <ChevronDown className="size-3.5" />
-                          </button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {(Object.keys(SORT_LABELS) as (keyof typeof SORT_LABELS)[]).map((key) => (
-                            <DropdownMenuItem
-                              key={key}
-                              onClick={() => setSortBy(key)}
-                              className={sortBy === key ? "font-medium text-primary" : ""}
-                            >
-                              {SORT_LABELS[key]}
-                            </DropdownMenuItem>
-                          ))}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
-                    </div>
-                  </div>
-
-                  <div className="hidden md:block">
-                    <CategoryCards />
-                  </div>
-
-                  <div className="mt-6 lg:mt-8 mb-4">
-                    <h2 className="text-base font-semibold">Prompts recentes</h2>
-                  </div>
-                </>
-              ) : (
-                <div className="mb-5 lg:mb-6 flex items-start justify-between gap-3">
-                  <div>
-                    <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2">
-                      {view === "trash" && <Trash2 className="size-5 text-muted-foreground" />}
-                      {heading}
-                    </h1>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      {view === "trash"
-                        ? `${filtered.length} itens · excluídos automaticamente após 30 dias`
-                        : `${filtered.length} prompts`}
-                    </p>
-                  </div>
-                  {view === "trash" && filtered.length > 0 && (
-                    <button
-                      onClick={() => {
-                        if (confirm("Esvaziar lixeira permanentemente?")) emptyTrash();
-                      }}
-                      className="shrink-0 text-sm text-destructive/70 hover:text-destructive border border-destructive/20 hover:border-destructive/50 rounded-lg px-3 py-1.5 min-h-[44px] transition-colors"
-                    >
-                      Esvaziar lixeira
-                    </button>
-                  )}
-                </div>
-              )}
-
-              {filtered.length === 0 ? (
-                <div className="text-center text-sm text-muted-foreground py-20">
-                  {view === "trash" ? "A lixeira está vazia." : "Nenhum prompt aqui ainda."}
-                </div>
-              ) : (
-                <div
-                  className={
-                    viewMode === "grid"
-                      ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
-                      : "flex flex-col gap-2"
-                  }
-                >
-                  {(showAll ? filtered : filtered.slice(0, 12)).map((p) => (
-                    <PromptCard key={p.id} prompt={p} mode={viewMode} inTrash={view === "trash"} />
-                  ))}
-                </div>
-              )}
-
-              {!showAll && filtered.length > 12 && (
-                <button
-                  onClick={() => setShowAll(true)}
-                  className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm rounded-2xl shadow-sm hover:bg-card/80 min-h-[48px] transition-all duration-150"
-                >
-                  Mostrar mais {filtered.length - 12} prompts
-                </button>
-              )}
-
-              <div className="lg:hidden mt-4 px-5 md:px-0">
-                <div className="rounded-2xl border border-border/30 bg-card/50 backdrop-blur-sm px-3 py-2 text-[11px] text-muted-foreground">
-                  <div className="flex items-center gap-1.5 justify-between">
-                    <div className="flex items-center gap-1.5">
-                      Publicado em:{" "}
-                      {isBuildTimeValid
-                        ? formatBuildTime(__APP_BUILD_TIME__)
-                        : "horário indisponível"}
-                      <CheckCircle2
-                        className={cn(
-                          "size-3.5",
-                          isLikelyFresh ? "text-emerald-500" : "text-amber-500",
-                        )}
-                      />
-                      <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
-                        {buildStatusText}
-                      </span>
-                    </div>
-                    {!isLikelyFresh && (
+                    {view === "trash" && filtered.length > 0 && (
                       <button
-                        onClick={forceRefreshApp}
-                        className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
+                        onClick={() => {
+                          if (confirm("Esvaziar lixeira permanentemente?")) emptyTrash();
+                        }}
+                        className="shrink-0 text-sm text-destructive/70 hover:text-destructive border border-destructive/20 hover:border-destructive/50 rounded-lg px-3 py-1.5 min-h-[44px] transition-colors"
                       >
-                        Atualizar
+                        Esvaziar lixeira
                       </button>
                     )}
                   </div>
+                )}
+
+                {filtered.length === 0 ? (
+                  <div className="text-center text-sm text-muted-foreground py-20">
+                    {view === "trash" ? "A lixeira está vazia." : "Nenhum prompt aqui ainda."}
+                  </div>
+                ) : (
+                  <div
+                    className={
+                      viewMode === "grid"
+                        ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
+                        : "flex flex-col gap-2"
+                    }
+                  >
+                    {(showAll ? filtered : filtered.slice(0, 12)).map((p) => (
+                      <PromptCard
+                        key={p.id}
+                        prompt={p}
+                        mode={viewMode}
+                        inTrash={view === "trash"}
+                      />
+                    ))}
+                  </div>
+                )}
+
+                {!showAll && filtered.length > 12 && (
+                  <button
+                    onClick={() => setShowAll(true)}
+                    className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm rounded-2xl shadow-sm hover:bg-card/80 min-h-[48px] transition-all duration-150"
+                  >
+                    Mostrar mais {filtered.length - 12} prompts
+                  </button>
+                )}
+
+                <div className="lg:hidden mt-4 px-5 md:px-0">
+                  <div className="rounded-2xl border border-border/30 bg-card/50 backdrop-blur-sm px-3 py-2 text-[11px] text-muted-foreground">
+                    <div className="flex items-center gap-1.5 justify-between">
+                      <div className="flex items-center gap-1.5">
+                        Publicado em:{" "}
+                        {isBuildTimeValid
+                          ? formatBuildTime(__APP_BUILD_TIME__)
+                          : "horário indisponível"}
+                        <CheckCircle2
+                          className={cn(
+                            "size-3.5",
+                            isLikelyFresh ? "text-emerald-500" : "text-amber-500",
+                          )}
+                        />
+                        <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
+                          {buildStatusText}
+                        </span>
+                      </div>
+                      {!isLikelyFresh && (
+                        <button
+                          onClick={forceRefreshApp}
+                          className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
+                        >
+                          Atualizar
+                        </button>
+                      )}
+                    </div>
+                  </div>
                 </div>
-              </div>
               </div>
             </div>
           </main>
