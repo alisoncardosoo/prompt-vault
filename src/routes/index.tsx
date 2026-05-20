@@ -9,7 +9,6 @@ import {
   Star,
   Trash2,
   Search,
-  MoreHorizontal,
   Plus,
   Hash,
   FileText,
@@ -20,6 +19,7 @@ import {
   X,
 } from "lucide-react";
 import { usePromptStore, timeAgo } from "@/lib/promptStore";
+import logo from "@/assets/logo.png";
 import { AppSidebar } from "@/components/app/Sidebar";
 import { AppHeader } from "@/components/app/Header";
 import { CategoryCards } from "@/components/app/CategoryCards";
@@ -112,8 +112,16 @@ function MobileTopNav({
   ];
 
   return (
-    <div className="lg:hidden flex items-center h-14 px-4 gap-3 bg-background/90 backdrop-blur-xl border-b border-border/30 shrink-0">
-      <div className="flex-1 flex items-center gap-1">
+    <div className="lg:hidden flex items-center h-14 px-4 gap-2 bg-background/90 backdrop-blur-xl border-b border-border/30 shrink-0">
+      <button
+        aria-label="Menu"
+        onClick={() => setSidebarOpen(true)}
+        className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl active:opacity-70 transition-opacity shrink-0"
+      >
+        <img src={logo} alt="Menu" className="size-7 rounded-lg shadow-sm" />
+      </button>
+
+      <div className="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-none">
         {tabs.map(({ id, label, icon: Icon }) => {
           const isActive = mobileSection === id && view === "all";
           return (
@@ -124,7 +132,7 @@ function MobileTopNav({
                 if (view !== "all") setView("all");
               }}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150",
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 shrink-0",
                 isActive
                   ? "bg-foreground text-background font-medium"
                   : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
@@ -136,14 +144,6 @@ function MobileTopNav({
           );
         })}
       </div>
-
-      <button
-        aria-label="Menu"
-        onClick={() => setSidebarOpen(true)}
-        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
-      >
-        <MoreHorizontal className="size-5" strokeWidth={1.7} />
-      </button>
     </div>
   );
 }
