@@ -24,7 +24,7 @@ export function AppHeader() {
   };
 
   return (
-    <header className="h-16 lg:h-14 px-4 lg:px-5 flex items-center gap-2 lg:gap-3 bg-background/70 backdrop-blur-xl shadow-sm shadow-black/[0.04] shrink-0">
+    <header className="hidden lg:flex h-14 px-5 items-center gap-3 bg-background/70 backdrop-blur-xl shadow-sm shadow-black/[0.04] shrink-0">
       {/* Mobile hamburger — 44px touch target */}
       <Button
         variant="ghost"

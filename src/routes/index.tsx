@@ -7,12 +7,13 @@ import {
   ChevronDown,
   CheckCircle2,
   Star,
-  Clock,
-  Folder,
-  Plus,
   Trash2,
+  Search,
+  PenSquare,
+  MoreHorizontal,
+  Sparkles,
 } from "lucide-react";
-import { usePromptStore } from "@/lib/promptStore";
+import { usePromptStore, timeAgo } from "@/lib/promptStore";
 import { AppSidebar } from "@/components/app/Sidebar";
 import { AppHeader } from "@/components/app/Header";
 import { CategoryCards } from "@/components/app/CategoryCards";
@@ -45,81 +46,273 @@ const ImageImportDialog = lazy(() =>
   })),
 );
 
-type DockItemProps = {
-  icon: typeof Star;
-  label: string;
-  active: boolean;
+function MobileBottomBar() {
+  const { openEditor } = usePromptStore();
+
+  return (
+    <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/90 dark:bg-background/95 backdrop-blur-xl border-t border-border/30">
+      <div
+        className="flex items-center px-5 py-3"
+        style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
+      >
+        <button
+          aria-label="Buscar"
+          onClick={() => document.querySelector<HTMLInputElement>("[data-search-input]")?.focus()}
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
+        >
+          <Search className="size-[22px]" strokeWidth={1.7} />
+        </button>
+
+        <button
+          onClick={() => openEditor()}
+          aria-label="Novo prompt"
+          className="flex-1 mx-3 flex items-center justify-center gap-2 bg-muted/70 dark:bg-muted/40 hover:bg-muted active:bg-muted rounded-xl px-4 py-2.5 min-h-[44px] transition-colors"
+        >
+          <Sparkles className="size-4 text-primary" />
+          <span className="text-[14px] font-medium text-foreground">Novo prompt</span>
+        </button>
+
+        <button
+          aria-label="Criar prompt"
+          onClick={() => openEditor()}
+          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
+        >
+          <PenSquare className="size-[22px]" strokeWidth={1.7} />
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+function MobileTopNav() {
+  const { view, viewArg, categories, userName, setView, setSidebarOpen, setSettingsOpen } =
+    usePromptStore();
+
+  const { icon, label } = useMemo(() => {
+    if (view === "favorites") return { icon: "⭐", label: "Favoritos" };
+    if (view === "recent") return { icon: "🕐", label: "Recentes" };
+    if (view === "attachments") return { icon: "📎", label: "Anexos" };
+    if (view === "trash") return { icon: "🗑️", label: "Lixeira" };
+    if (view === "category") {
+      const cat = categories.find((c) => c.id === viewArg);
+      return { icon: "📁", label: cat?.name ?? "Pasta" };
+    }
+    if (view === "tag") return { icon: "#️⃣", label: viewArg ?? "Tag" };
+    return { icon: "🏠", label: "Biblioteca" };
+  }, [view, viewArg, categories]);
+
+  const initials = userName.slice(0, 2).toUpperCase();
+
+  return (
+    <div className="lg:hidden flex items-center h-14 px-4 gap-2 bg-background/90 backdrop-blur-xl border-b border-border/30 shrink-0">
+      <button
+        aria-label="Abrir menu"
+        onClick={() => setSidebarOpen(true)}
+        className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm shrink-0 active:scale-95 transition-transform"
+      >
+        {initials}
+      </button>
+
+      <button
+        onClick={() => setView("all")}
+        className="flex-1 flex items-center justify-center gap-1.5 bg-muted/60 rounded-full px-3 py-1.5 min-h-[36px] active:bg-muted transition-colors"
+      >
+        <span className="text-base leading-none">{icon}</span>
+        <span className="text-[14px] font-medium text-foreground truncate">{label}</span>
+        <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
+      </button>
+
+      <button
+        aria-label="Buscar"
+        onClick={() => document.querySelector<HTMLInputElement>("[data-search-input]")?.focus()}
+        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
+      >
+        <Search className="size-5" strokeWidth={1.7} />
+      </button>
+
+      <button
+        aria-label="Configurações"
+        onClick={() => setSettingsOpen(true)}
+        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
+      >
+        <MoreHorizontal className="size-5" strokeWidth={1.7} />
+      </button>
+    </div>
+  );
+}
+
+type MobileListRowProps = {
+  emoji?: string;
+  title: string;
+  meta?: string;
   onClick: () => void;
+  isFavorite?: boolean;
 };
 
-function DockItem({ icon: Icon, label, active, onClick }: DockItemProps) {
+function MobileListRow({ emoji, title, meta, onClick, isFavorite }: MobileListRowProps) {
   return (
     <button
       onClick={onClick}
-      aria-label={label}
-      className={cn(
-        "flex flex-col items-center justify-center gap-[5px] flex-1 py-1 transition-all duration-200 active:scale-90",
-        active ? "text-neutral-900 dark:text-white" : "text-neutral-400 dark:text-neutral-500",
-      )}
+      className="w-full flex items-center gap-3 px-5 py-3 min-h-[52px] active:bg-muted/60 transition-colors text-left"
     >
-      <Icon className="size-[22px] shrink-0" strokeWidth={active ? 2.2 : 1.6} />
-      <span
-        className={cn(
-          "text-[10px] leading-none tracking-tight",
-          active ? "font-semibold" : "font-normal",
-        )}
-      >
-        {label}
-      </span>
+      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 text-base">
+        {emoji ?? "📝"}
+      </div>
+      <span className="text-[15px] flex-1 truncate text-foreground">{title}</span>
+      {isFavorite && <Star className="size-3.5 fill-primary text-primary shrink-0" />}
+      {meta && (
+        <span className="text-xs text-muted-foreground shrink-0 tabular-nums">{meta}</span>
+      )}
     </button>
   );
 }
 
-function MobileBottomNav() {
-  const { view, setView, openEditor, setSidebarOpen } = usePromptStore();
+function MobileHomeContent() {
+  const { prompts, categories, setView, setSelected } = usePromptStore();
+  const [recentsOpen, setRecentsOpen] = useState(true);
+  const [favoritesOpen, setFavoritesOpen] = useState(true);
+  const [pastasOpen, setPastasOpen] = useState(true);
+
+  const recentPrompts = useMemo(
+    () =>
+      prompts
+        .filter((p) => !p.isArchived && p.lastUsedAt)
+        .sort((a, b) => (b.lastUsedAt ?? 0) - (a.lastUsedAt ?? 0))
+        .slice(0, 8),
+    [prompts],
+  );
+
+  const favoritePrompts = useMemo(
+    () => prompts.filter((p) => !p.isArchived && p.isFavorite).slice(0, 6),
+    [prompts],
+  );
+
+  const SectionHeader = ({
+    label,
+    count,
+    isOpen,
+    onToggle,
+    onViewAll,
+  }: {
+    label: string;
+    count?: number;
+    isOpen: boolean;
+    onToggle: () => void;
+    onViewAll?: () => void;
+  }) => (
+    <div className="flex items-center justify-between py-2 px-5">
+      <button
+        onClick={onToggle}
+        className="flex items-center gap-2 text-sm font-semibold text-foreground active:opacity-70 transition-opacity"
+      >
+        <ChevronDown
+          className={cn(
+            "size-4 text-muted-foreground transition-transform duration-200",
+            !isOpen && "-rotate-90",
+          )}
+        />
+        {label}
+        {count !== undefined && (
+          <span className="text-xs text-muted-foreground font-normal">({count})</span>
+        )}
+      </button>
+      {onViewAll && (
+        <button
+          onClick={onViewAll}
+          className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+        >
+          Ver tudo
+        </button>
+      )}
+    </div>
+  );
 
   return (
-    <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch gap-2.5 pointer-events-none px-4"
-      style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 20px)" }}
-    >
-      {/* Dock */}
-      <div className="pointer-events-auto flex-1 flex items-center bg-white/45 dark:bg-neutral-900/45 backdrop-blur-2xl rounded-[24px] px-2 py-3 border border-white/70 dark:border-white/10 shadow-lg shadow-black/10">
-        <DockItem
-          icon={LayoutGrid}
-          label="Todos"
-          active={view === "all"}
-          onClick={() => setView("all")}
-        />
-        <DockItem
-          icon={Star}
-          label="Favoritos"
-          active={view === "favorites"}
-          onClick={() => setView("favorites")}
-        />
-        <DockItem
-          icon={Clock}
+    <div className="lg:hidden space-y-1 pt-2">
+      <section>
+        <SectionHeader
           label="Recentes"
-          active={view === "recent"}
-          onClick={() => setView("recent")}
+          count={recentPrompts.length}
+          isOpen={recentsOpen}
+          onToggle={() => setRecentsOpen((v) => !v)}
+          onViewAll={() => setView("recent")}
         />
-        <DockItem
-          icon={Folder}
-          label="Pastas"
-          active={false}
-          onClick={() => setSidebarOpen(true)}
-        />
-      </div>
+        {recentsOpen && recentPrompts.length > 0 && (
+          <div className="flex gap-3 overflow-x-auto px-5 pb-3 pt-1 scrollbar-none">
+            {recentPrompts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSelected(p.id)}
+                className="shrink-0 w-[140px] bg-card rounded-2xl p-3.5 shadow-sm shadow-black/[0.06] text-left active:scale-95 transition-transform"
+              >
+                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-base mb-2">
+                  📝
+                </div>
+                <p className="text-[13px] font-medium leading-tight line-clamp-2">{p.title}</p>
+                <p className="text-[11px] text-muted-foreground mt-1">
+                  {timeAgo(p.lastUsedAt)}
+                </p>
+              </button>
+            ))}
+          </div>
+        )}
+        {recentsOpen && recentPrompts.length === 0 && (
+          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum prompt usado ainda.</p>
+        )}
+      </section>
 
-      {/* FAB — mesma altura do dock, cor sólida */}
-      <button
-        onClick={() => openEditor()}
-        aria-label="Novo prompt"
-        className="pointer-events-auto shrink-0 w-[62px] rounded-[24px] bg-amber-400 hover:bg-amber-300 active:scale-95 text-neutral-900 flex items-center justify-center shadow-lg shadow-amber-400/35 transition-all duration-200"
-      >
-        <Plus className="size-6" strokeWidth={2.5} />
-      </button>
-    </nav>
+      <div className="h-px bg-border/30 mx-5" />
+
+      <section>
+        <SectionHeader
+          label="Favoritos"
+          count={favoritePrompts.length}
+          isOpen={favoritesOpen}
+          onToggle={() => setFavoritesOpen((v) => !v)}
+          onViewAll={() => setView("favorites")}
+        />
+        {favoritesOpen &&
+          favoritePrompts.map((p) => (
+            <MobileListRow
+              key={p.id}
+              title={p.title}
+              meta={timeAgo(p.updatedAt)}
+              isFavorite
+              onClick={() => setSelected(p.id)}
+            />
+          ))}
+        {favoritesOpen && favoritePrompts.length === 0 && (
+          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum favorito ainda.</p>
+        )}
+      </section>
+
+      <div className="h-px bg-border/30 mx-5" />
+
+      <section>
+        <SectionHeader
+          label="Pastas"
+          count={categories.length}
+          isOpen={pastasOpen}
+          onToggle={() => setPastasOpen((v) => !v)}
+        />
+        {pastasOpen &&
+          categories.map((c) => {
+            const count = prompts.filter((p) => p.categoryId === c.id && !p.isArchived).length;
+            return (
+              <MobileListRow
+                key={c.id}
+                emoji="📁"
+                title={c.name}
+                meta={String(count)}
+                onClick={() => setView("category", c.id)}
+              />
+            );
+          })}
+        {pastasOpen && categories.length === 0 && (
+          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhuma pasta criada.</p>
+        )}
+      </section>
+    </div>
   );
 }
 
@@ -265,11 +458,22 @@ function Page() {
       <AppSidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
+        <MobileTopNav />
         <AppHeader />
 
         <div className="flex-1 flex min-h-0">
-          <main className="flex-1 overflow-y-auto overscroll-contain px-5 md:px-7 lg:px-10 py-5 lg:py-7">
-            <div className="max-w-5xl pb-28 lg:pb-4">
+          <main
+            className={cn(
+              "flex-1 overflow-y-auto overscroll-contain py-5 lg:py-7",
+              view === "all" && !search
+                ? "px-0 md:px-7 lg:px-10"
+                : "px-5 md:px-7 lg:px-10",
+            )}
+          >
+            <div className="max-w-5xl pb-24 lg:pb-4">
+              {view === "all" && !search && <MobileHomeContent />}
+
+              <div className={cn(view === "all" && !search ? "hidden lg:block" : "")}>
               {!heading ? (
                 <>
                   <div className="flex items-start justify-between mb-5 lg:mb-6 gap-3">
@@ -388,7 +592,7 @@ function Page() {
                 </button>
               )}
 
-              <div className="lg:hidden mt-4">
+              <div className="lg:hidden mt-4 px-5 md:px-0">
                 <div className="rounded-2xl border border-border/30 bg-card/50 backdrop-blur-sm px-3 py-2 text-[11px] text-muted-foreground">
                   <div className="flex items-center gap-1.5 justify-between">
                     <div className="flex items-center gap-1.5">
@@ -416,6 +620,7 @@ function Page() {
                     )}
                   </div>
                 </div>
+              </div>
               </div>
             </div>
           </main>
@@ -455,7 +660,7 @@ function Page() {
         ) : null}
       </Suspense>
       <Toaster position="top-center" />
-      <MobileBottomNav />
+      <MobileBottomBar />
     </div>
   );
 }
