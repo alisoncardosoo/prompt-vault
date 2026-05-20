@@ -55,6 +55,22 @@ const ImageImportDialog = lazy(() =>
 
 type MobileSection = "home" | "todos" | "pastas" | "tags";
 
+function useLocalStorage<T>(key: string, fallback: T): [T, (v: T) => void] {
+  const [value, setValue] = useState<T>(() => {
+    try {
+      const stored = localStorage.getItem(key);
+      return stored !== null ? (JSON.parse(stored) as T) : fallback;
+    } catch {
+      return fallback;
+    }
+  });
+  const set = (v: T) => {
+    localStorage.setItem(key, JSON.stringify(v));
+    setValue(v);
+  };
+  return [value, set];
+}
+
 function MobileBottomBar() {
   const { openEditor, search, setSearch, setImageImportOpen } = usePromptStore();
 
@@ -186,8 +202,14 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
   const [pastasOpen, setPastasOpen] = useState(true);
   const [favoritesOpen, setFavoritesOpen] = useState(true);
   const [recentsOpen, setRecentsOpen] = useState(true);
-  const [recentsViewMode, setRecentsViewMode] = useState<"list" | "cards">("list");
-  const [todosViewMode, setTodosViewMode] = useState<"list" | "cards">("list");
+  const [recentsViewMode, setRecentsViewMode] = useLocalStorage<"list" | "cards">(
+    "pref:recentsViewMode",
+    "list",
+  );
+  const [todosViewMode, setTodosViewMode] = useLocalStorage<"list" | "cards">(
+    "pref:todosViewMode",
+    "list",
+  );
 
   const recentPrompts = useMemo(
     () =>
@@ -554,8 +576,11 @@ function Page() {
   });
   const [mobileSection, setMobileSection] = useState<MobileSection>("home");
   const [showAll, setShowAll] = useState(false);
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
-  const [sortBy, setSortBy] = useState<"recent" | "alpha" | "rating">("recent");
+  const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">("pref:viewMode", "grid");
+  const [sortBy, setSortBy] = useLocalStorage<"recent" | "alpha" | "rating">(
+    "pref:sortBy",
+    "recent",
+  );
   const [nowMs, setNowMs] = useState(() => Date.now());
   const buildTime = new Date(__APP_BUILD_TIME__);
   const isBuildTimeValid = !Number.isNaN(buildTime.getTime());
