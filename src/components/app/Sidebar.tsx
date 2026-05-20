@@ -498,7 +498,8 @@ export function AppSidebar() {
       <Sheet open={sidebarOpen} onOpenChange={setSidebarOpen}>
         <SheetContent
           side="left"
-          className="p-0 w-72 bg-sidebar/80 backdrop-blur-2xl border-sidebar-border/30 flex flex-col"
+          hideClose
+          className="p-0 w-72 bg-sidebar border-sidebar-border/30 flex flex-col"
         >
           <SheetTitle className="sr-only">Navegação da biblioteca</SheetTitle>
           <SheetDescription className="sr-only">

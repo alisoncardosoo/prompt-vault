@@ -52,7 +52,7 @@ const ImageImportDialog = lazy(() =>
   })),
 );
 
-type MobileSection = "home" | "pastas" | "tags";
+type MobileSection = "home" | "todos" | "pastas" | "tags";
 
 function MobileBottomBar() {
   const { openEditor, search, setSearch } = usePromptStore();
@@ -106,6 +106,7 @@ function MobileTopNav({
 
   const tabs: { id: MobileSection; label: string; icon: typeof Home }[] = [
     { id: "home", label: "Home", icon: Home },
+    { id: "todos", label: "Todos", icon: LayoutGrid },
     { id: "pastas", label: "Pastas", icon: Folder },
     { id: "tags", label: "Tags", icon: Tag },
   ];
@@ -176,6 +177,7 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
   const [pastasOpen, setPastasOpen] = useState(true);
   const [favoritesOpen, setFavoritesOpen] = useState(true);
   const [recentsOpen, setRecentsOpen] = useState(true);
+  const [recentsViewMode, setRecentsViewMode] = useState<"list" | "cards">("list");
 
   const recentPrompts = useMemo(
     () =>
@@ -203,12 +205,14 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
     isOpen,
     onToggle,
     onViewAll,
+    actions,
   }: {
     label: string;
     count?: number;
     isOpen: boolean;
     onToggle: () => void;
     onViewAll?: () => void;
+    actions?: React.ReactNode;
   }) => (
     <div className="flex items-center justify-between py-2 px-5">
       <button
@@ -226,16 +230,43 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
           <span className="text-xs text-muted-foreground font-normal">({count})</span>
         )}
       </button>
-      {onViewAll && (
-        <button
-          onClick={onViewAll}
-          className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
-        >
-          Ver tudo
-        </button>
-      )}
+      <div className="flex items-center gap-1">
+        {actions}
+        {onViewAll && (
+          <button
+            onClick={onViewAll}
+            className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1"
+          >
+            Ver tudo
+          </button>
+        )}
+      </div>
     </div>
   );
+
+  if (mobileSection === "todos") {
+    const allPrompts = prompts
+      .filter((p) => !p.isArchived)
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+    return (
+      <div className="lg:hidden pt-2">
+        {allPrompts.length === 0 ? (
+          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum prompt ainda.</p>
+        ) : (
+          allPrompts.map((p) => (
+            <MobileListRow
+              key={p.id}
+              icon={<FileText className="size-4" />}
+              title={p.title}
+              meta={timeAgo(p.updatedAt)}
+              isFavorite={p.isFavorite}
+              onClick={() => setSelected(p.id)}
+            />
+          ))
+        )}
+      </div>
+    );
+  }
 
   if (mobileSection === "tags") {
     return (
@@ -328,8 +359,33 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
           isOpen={recentsOpen}
           onToggle={() => setRecentsOpen((v) => !v)}
           onViewAll={() => setView("recent")}
+          actions={
+            <div className="flex items-center">
+              <button
+                onClick={() => setRecentsViewMode("list")}
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors",
+                  recentsViewMode === "list" ? "text-foreground" : "text-muted-foreground",
+                )}
+                aria-label="Visualização em lista"
+              >
+                <List className="size-3.5" />
+              </button>
+              <button
+                onClick={() => setRecentsViewMode("cards")}
+                className={cn(
+                  "p-1.5 rounded-lg transition-colors",
+                  recentsViewMode === "cards" ? "text-foreground" : "text-muted-foreground",
+                )}
+                aria-label="Visualização em cartões"
+              >
+                <LayoutGrid className="size-3.5" />
+              </button>
+            </div>
+          }
         />
         {recentsOpen &&
+          recentsViewMode === "list" &&
           recentPrompts.map((p) => (
             <MobileListRow
               key={p.id}
@@ -339,6 +395,32 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
               onClick={() => setSelected(p.id)}
             />
           ))}
+        {recentsOpen && recentsViewMode === "cards" && recentPrompts.length > 0 && (
+          <div className="px-5 grid grid-cols-2 gap-2 pb-3 pt-1">
+            {recentPrompts.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setSelected(p.id)}
+                className="text-left bg-card/60 border border-border/30 rounded-xl p-3 active:scale-[0.98] transition-transform"
+              >
+                <p className="text-[13px] font-medium line-clamp-2 text-foreground">{p.title}</p>
+                {p.tags.length > 0 && (
+                  <div className="flex flex-wrap gap-1 mt-1.5">
+                    {p.tags.slice(0, 2).map((t) => (
+                      <span
+                        key={t}
+                        className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full"
+                      >
+                        #{t}
+                      </span>
+                    ))}
+                  </div>
+                )}
+                <p className="text-[11px] text-muted-foreground mt-1.5">{timeAgo(p.lastUsedAt)}</p>
+              </button>
+            ))}
+          </div>
+        )}
         {recentsOpen && recentPrompts.length === 0 && (
           <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum prompt usado ainda.</p>
         )}
