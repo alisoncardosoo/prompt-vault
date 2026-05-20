@@ -1,4 +1,4 @@
-import { lazy, Suspense, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
 import { createFileRoute } from "@tanstack/react-router";
 import { Toaster } from "sonner";
 import {
@@ -11,6 +11,7 @@ import {
   Search,
   Plus,
   Sparkles,
+  ArrowLeft,
   Hash,
   FileText,
   Home,
@@ -71,8 +72,8 @@ function useLocalStorage<T>(key: string, fallback: T): [T, (v: T) => void] {
   return [value, set];
 }
 
-function MobileBottomBar() {
-  const { openEditor, search, setSearch, setImageImportOpen } = usePromptStore();
+function MobileBottomBar({ onSearchOpen }: { onSearchOpen: () => void }) {
+  const { openEditor, setImageImportOpen } = usePromptStore();
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/90 dark:bg-background/95 backdrop-blur-xl border-t border-border/30">
@@ -96,27 +97,109 @@ function MobileBottomBar() {
           <Sparkles className="size-4.5" />
         </button>
 
-        <div className="flex-1 relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
-          <input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar prompts..."
-            className="w-full h-11 bg-muted/60 border border-border/40 rounded-xl pl-9 pr-9 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
-            style={{ fontSize: "16px" }}
-          />
-          {search && (
-            <button
-              onClick={() => setSearch("")}
-              aria-label="Limpar busca"
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/20 text-muted-foreground"
-            >
-              <X className="size-3" />
-            </button>
-          )}
-        </div>
+        <button
+          onClick={onSearchOpen}
+          className="flex-1 h-11 bg-muted/60 border border-border/40 rounded-xl flex items-center gap-2 px-3 active:bg-muted/80 transition-colors"
+        >
+          <Search className="size-4 text-muted-foreground shrink-0" />
+          <span className="text-sm text-muted-foreground">Buscar prompts...</span>
+        </button>
       </div>
     </nav>
+  );
+}
+
+function MobileSearchDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { prompts, setSelected } = usePromptStore();
+  const [query, setQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) {
+      setQuery("");
+      const t = setTimeout(() => inputRef.current?.focus(), 80);
+      return () => clearTimeout(t);
+    }
+  }, [open]);
+
+  const results = useMemo(() => {
+    if (!query.trim()) return [];
+    const q = query.toLowerCase();
+    return prompts
+      .filter(
+        (p) =>
+          !p.isArchived &&
+          (p.title.toLowerCase().includes(q) ||
+            p.content.toLowerCase().includes(q) ||
+            p.description.toLowerCase().includes(q) ||
+            p.tags.some((t) => t.toLowerCase().includes(q))),
+      )
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+  }, [prompts, query]);
+
+  if (!open) return null;
+
+  return (
+    <div className="lg:hidden fixed inset-0 z-50 bg-background flex flex-col">
+      <div className="flex items-center gap-3 px-4 h-14 border-b border-border/30 shrink-0">
+        <button
+          onClick={onClose}
+          aria-label="Fechar busca"
+          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
+        >
+          <ArrowLeft className="size-5" />
+        </button>
+        <input
+          ref={inputRef}
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Buscar prompts..."
+          className="flex-1 bg-transparent text-base outline-none text-foreground placeholder:text-muted-foreground"
+          style={{ fontSize: "16px" }}
+        />
+        {query && (
+          <button
+            onClick={() => setQuery("")}
+            className="min-w-[28px] min-h-[28px] flex items-center justify-center rounded-full bg-muted text-muted-foreground"
+          >
+            <X className="size-3.5" />
+          </button>
+        )}
+      </div>
+
+      <div className="flex-1 overflow-y-auto overscroll-contain pb-6">
+        {!query.trim() ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
+            <Search className="size-9 opacity-30" />
+            <p className="text-sm">Digite para buscar</p>
+          </div>
+        ) : results.length === 0 ? (
+          <div className="flex flex-col items-center justify-center py-24 gap-3 text-muted-foreground">
+            <p className="text-sm">Nenhum resultado para "{query}"</p>
+          </div>
+        ) : (
+          <>
+            <p className="text-sm font-semibold px-5 pt-4 pb-2 text-foreground">
+              Resultados:{" "}
+              <span className="font-normal text-muted-foreground">{results.length}</span>
+            </p>
+            <div className="px-5 flex flex-col gap-3">
+              {results.map((p) => (
+                <div
+                  key={p.id}
+                  onClick={() => {
+                    setSelected(p.id);
+                    onClose();
+                  }}
+                >
+                  <PromptCard prompt={p} mode="grid" />
+                </div>
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+    </div>
   );
 }
 
@@ -326,28 +409,9 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
             />
           ))
         ) : (
-          <div className="px-5 grid grid-cols-2 gap-2 pb-3">
+          <div className="px-5 flex flex-col gap-3 pb-3">
             {allPrompts.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setSelected(p.id)}
-                className="text-left bg-card/60 border border-border/30 rounded-xl p-3 active:scale-[0.98] transition-transform"
-              >
-                <p className="text-[13px] font-medium line-clamp-2 text-foreground">{p.title}</p>
-                {p.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {p.tags.slice(0, 2).map((t) => (
-                      <span
-                        key={t}
-                        className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full"
-                      >
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-[11px] text-muted-foreground mt-1.5">{timeAgo(p.updatedAt)}</p>
-              </button>
+              <PromptCard key={p.id} prompt={p} mode="grid" />
             ))}
           </div>
         )}
@@ -483,28 +547,9 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
             />
           ))}
         {recentsOpen && recentsViewMode === "cards" && recentPrompts.length > 0 && (
-          <div className="px-5 grid grid-cols-2 gap-2 pb-3 pt-1">
+          <div className="px-5 flex flex-col gap-3 pb-3 pt-1">
             {recentPrompts.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setSelected(p.id)}
-                className="text-left bg-card/60 border border-border/30 rounded-xl p-3 active:scale-[0.98] transition-transform"
-              >
-                <p className="text-[13px] font-medium line-clamp-2 text-foreground">{p.title}</p>
-                {p.tags.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-1.5">
-                    {p.tags.slice(0, 2).map((t) => (
-                      <span
-                        key={t}
-                        className="text-[10px] bg-muted text-muted-foreground px-1.5 py-0.5 rounded-full"
-                      >
-                        #{t}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                <p className="text-[11px] text-muted-foreground mt-1.5">{timeAgo(p.lastUsedAt)}</p>
-              </button>
+              <PromptCard key={p.id} prompt={p} mode="grid" />
             ))}
           </div>
         )}
@@ -575,6 +620,7 @@ function Page() {
     return "Boa noite";
   });
   const [mobileSection, setMobileSection] = useState<MobileSection>("home");
+  const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">("pref:viewMode", "grid");
   const [sortBy, setSortBy] = useLocalStorage<"recent" | "alpha" | "rating">(
@@ -869,7 +915,8 @@ function Page() {
         ) : null}
       </Suspense>
       <Toaster position="top-center" />
-      <MobileBottomBar />
+      <MobileBottomBar onSearchOpen={() => setMobileSearchOpen(true)} />
+      <MobileSearchDialog open={mobileSearchOpen} onClose={() => setMobileSearchOpen(false)} />
     </div>
   );
 }
