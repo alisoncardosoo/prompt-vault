@@ -42,11 +42,17 @@ const styles: Record<string, { bg: string; bgCard: string; icon: typeof Folder; 
     },
   };
 
-export function CategoryCards() {
+export function CategoryCards({ horizontal = false }: { horizontal?: boolean }) {
   const { categories, prompts, setView, renameCategory, setCategoryColor, deleteCategory } =
     usePromptStore();
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+    <div
+      className={
+        horizontal
+          ? "flex gap-3 overflow-x-auto pb-3 scrollbar-none"
+          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+      }
+    >
       {categories.map((c) => {
         const s = styles[c.color];
         const Icon = s.icon;
@@ -55,7 +61,7 @@ export function CategoryCards() {
           <button
             key={c.id}
             onClick={() => setView("category", c.id)}
-            className={`${s.bgCard} backdrop-blur-xl border border-white/20 rounded-[20px] p-5 text-left hover:shadow-lg hover:shadow-black/[0.08] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 min-h-[128px] flex flex-col justify-between group relative`}
+            className={`${s.bgCard} backdrop-blur-xl border border-white/20 rounded-[20px] text-left hover:shadow-lg hover:shadow-black/[0.08] hover:-translate-y-0.5 active:scale-[0.98] transition-all duration-200 flex flex-col justify-between group relative ${horizontal ? "shrink-0 w-[148px] min-h-[108px] p-4" : "min-h-[128px] p-5"}`}
           >
             <div className="flex items-start justify-between">
               <div className={`size-10 rounded-xl flex items-center justify-center ${s.iconBg}`}>

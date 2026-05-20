@@ -9,9 +9,15 @@ import {
   Star,
   Trash2,
   Search,
-  PenSquare,
   MoreHorizontal,
-  Sparkles,
+  Plus,
+  Hash,
+  FileText,
+  Home,
+  Folder,
+  Tag,
+  Clock,
+  X,
 } from "lucide-react";
 import { usePromptStore, timeAgo } from "@/lib/promptStore";
 import { AppSidebar } from "@/components/app/Sidebar";
@@ -46,93 +52,93 @@ const ImageImportDialog = lazy(() =>
   })),
 );
 
+type MobileSection = "home" | "pastas" | "tags";
+
 function MobileBottomBar() {
-  const { openEditor } = usePromptStore();
+  const { openEditor, search, setSearch } = usePromptStore();
 
   return (
     <nav className="lg:hidden fixed bottom-0 inset-x-0 z-40 bg-background/90 dark:bg-background/95 backdrop-blur-xl border-t border-border/30">
       <div
-        className="flex items-center px-5 py-3"
+        className="flex items-center px-4 gap-3 py-3"
         style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 16px)" }}
       >
         <button
-          aria-label="Buscar"
-          onClick={() => document.querySelector<HTMLInputElement>("[data-search-input]")?.focus()}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
-        >
-          <Search className="size-[22px]" strokeWidth={1.7} />
-        </button>
-
-        <button
           onClick={() => openEditor()}
           aria-label="Novo prompt"
-          className="flex-1 mx-3 flex items-center justify-center gap-2 bg-muted/70 dark:bg-muted/40 hover:bg-muted active:bg-muted rounded-xl px-4 py-2.5 min-h-[44px] transition-colors"
+          className="w-11 h-11 shrink-0 rounded-full bg-primary flex items-center justify-center text-primary-foreground active:scale-95 transition-transform shadow-sm"
         >
-          <Sparkles className="size-4 text-primary" />
-          <span className="text-[14px] font-medium text-foreground">Novo prompt</span>
+          <Plus className="size-5" strokeWidth={2.5} />
         </button>
 
-        <button
-          aria-label="Criar prompt"
-          onClick={() => openEditor()}
-          className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
-        >
-          <PenSquare className="size-[22px]" strokeWidth={1.7} />
-        </button>
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground pointer-events-none" />
+          <input
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            placeholder="Buscar prompts..."
+            className="w-full h-11 bg-muted/60 border border-border/40 rounded-xl pl-9 pr-9 text-sm outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/30 transition-all"
+            style={{ fontSize: "16px" }}
+          />
+          {search && (
+            <button
+              onClick={() => setSearch("")}
+              aria-label="Limpar busca"
+              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/20 text-muted-foreground"
+            >
+              <X className="size-3" />
+            </button>
+          )}
+        </div>
       </div>
     </nav>
   );
 }
 
-function MobileTopNav() {
-  const { view, viewArg, categories, userName, setView, setSidebarOpen, setSettingsOpen } =
-    usePromptStore();
+function MobileTopNav({
+  mobileSection,
+  setMobileSection,
+}: {
+  mobileSection: MobileSection;
+  setMobileSection: (s: MobileSection) => void;
+}) {
+  const { view, setView, setSidebarOpen } = usePromptStore();
 
-  const { icon, label } = useMemo(() => {
-    if (view === "favorites") return { icon: "⭐", label: "Favoritos" };
-    if (view === "recent") return { icon: "🕐", label: "Recentes" };
-    if (view === "attachments") return { icon: "📎", label: "Anexos" };
-    if (view === "trash") return { icon: "🗑️", label: "Lixeira" };
-    if (view === "category") {
-      const cat = categories.find((c) => c.id === viewArg);
-      return { icon: "📁", label: cat?.name ?? "Pasta" };
-    }
-    if (view === "tag") return { icon: "#️⃣", label: viewArg ?? "Tag" };
-    return { icon: "🏠", label: "Biblioteca" };
-  }, [view, viewArg, categories]);
-
-  const initials = userName.slice(0, 2).toUpperCase();
+  const tabs: { id: MobileSection; label: string; icon: typeof Home }[] = [
+    { id: "home", label: "Home", icon: Home },
+    { id: "pastas", label: "Pastas", icon: Folder },
+    { id: "tags", label: "Tags", icon: Tag },
+  ];
 
   return (
-    <div className="lg:hidden flex items-center h-14 px-4 gap-2 bg-background/90 backdrop-blur-xl border-b border-border/30 shrink-0">
+    <div className="lg:hidden flex items-center h-14 px-4 gap-3 bg-background/90 backdrop-blur-xl border-b border-border/30 shrink-0">
+      <div className="flex-1 flex items-center gap-1">
+        {tabs.map(({ id, label, icon: Icon }) => {
+          const isActive = mobileSection === id && view === "all";
+          return (
+            <button
+              key={id}
+              onClick={() => {
+                setMobileSection(id);
+                if (view !== "all") setView("all");
+              }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150",
+                isActive
+                  ? "bg-foreground text-background font-medium"
+                  : "text-muted-foreground hover:text-foreground hover:bg-muted/60",
+              )}
+            >
+              <Icon className="size-3.5" />
+              {label}
+            </button>
+          );
+        })}
+      </div>
+
       <button
-        aria-label="Abrir menu"
+        aria-label="Menu"
         onClick={() => setSidebarOpen(true)}
-        className="w-9 h-9 rounded-full bg-primary/20 flex items-center justify-center text-primary font-semibold text-sm shrink-0 active:scale-95 transition-transform"
-      >
-        {initials}
-      </button>
-
-      <button
-        onClick={() => setView("all")}
-        className="flex-1 flex items-center justify-center gap-1.5 bg-muted/60 rounded-full px-3 py-1.5 min-h-[36px] active:bg-muted transition-colors"
-      >
-        <span className="text-base leading-none">{icon}</span>
-        <span className="text-[14px] font-medium text-foreground truncate">{label}</span>
-        <ChevronDown className="size-3.5 text-muted-foreground shrink-0" />
-      </button>
-
-      <button
-        aria-label="Buscar"
-        onClick={() => document.querySelector<HTMLInputElement>("[data-search-input]")?.focus()}
-        className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
-      >
-        <Search className="size-5" strokeWidth={1.7} />
-      </button>
-
-      <button
-        aria-label="Configurações"
-        onClick={() => setSettingsOpen(true)}
         className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
       >
         <MoreHorizontal className="size-5" strokeWidth={1.7} />
@@ -142,21 +148,21 @@ function MobileTopNav() {
 }
 
 type MobileListRowProps = {
-  emoji?: string;
+  icon?: React.ReactNode;
   title: string;
   meta?: string;
   onClick: () => void;
   isFavorite?: boolean;
 };
 
-function MobileListRow({ emoji, title, meta, onClick, isFavorite }: MobileListRowProps) {
+function MobileListRow({ icon, title, meta, onClick, isFavorite }: MobileListRowProps) {
   return (
     <button
       onClick={onClick}
       className="w-full flex items-center gap-3 px-5 py-3 min-h-[52px] active:bg-muted/60 transition-colors text-left"
     >
-      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 text-base">
-        {emoji ?? "📝"}
+      <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0 text-muted-foreground">
+        {icon ?? <FileText className="size-4" />}
       </div>
       <span className="text-[15px] flex-1 truncate text-foreground">{title}</span>
       {isFavorite && <Star className="size-3.5 fill-primary text-primary shrink-0" />}
@@ -165,11 +171,11 @@ function MobileListRow({ emoji, title, meta, onClick, isFavorite }: MobileListRo
   );
 }
 
-function MobileHomeContent() {
+function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) {
   const { prompts, categories, setView, setSelected } = usePromptStore();
-  const [recentsOpen, setRecentsOpen] = useState(true);
-  const [favoritesOpen, setFavoritesOpen] = useState(true);
   const [pastasOpen, setPastasOpen] = useState(true);
+  const [favoritesOpen, setFavoritesOpen] = useState(true);
+  const [recentsOpen, setRecentsOpen] = useState(true);
 
   const recentPrompts = useMemo(
     () =>
@@ -184,6 +190,12 @@ function MobileHomeContent() {
     () => prompts.filter((p) => !p.isArchived && p.isFavorite).slice(0, 6),
     [prompts],
   );
+
+  const allTags = useMemo(() => {
+    const set = new Set<string>();
+    prompts.filter((p) => !p.isArchived).forEach((p) => p.tags.forEach((t) => set.add(t)));
+    return Array.from(set).sort();
+  }, [prompts]);
 
   const SectionHeader = ({
     label,
@@ -225,35 +237,59 @@ function MobileHomeContent() {
     </div>
   );
 
-  return (
-    <div className="lg:hidden space-y-1 pt-2">
-      <section>
-        <SectionHeader
-          label="Recentes"
-          count={recentPrompts.length}
-          isOpen={recentsOpen}
-          onToggle={() => setRecentsOpen((v) => !v)}
-          onViewAll={() => setView("recent")}
-        />
-        {recentsOpen && recentPrompts.length > 0 && (
-          <div className="flex gap-3 overflow-x-auto px-5 pb-3 pt-1 scrollbar-none">
-            {recentPrompts.map((p) => (
+  if (mobileSection === "tags") {
+    return (
+      <div className="lg:hidden pt-4 px-5">
+        <p className="text-sm font-semibold text-foreground mb-3">Tags</p>
+        {allTags.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma tag criada.</p>
+        ) : (
+          <div className="flex flex-wrap gap-2">
+            {allTags.map((tag) => (
               <button
-                key={p.id}
-                onClick={() => setSelected(p.id)}
-                className="shrink-0 w-[140px] bg-card rounded-2xl p-3.5 shadow-sm shadow-black/[0.06] text-left active:scale-95 transition-transform"
+                key={tag}
+                onClick={() => setView("tag", tag)}
+                className="flex items-center gap-1.5 bg-muted/70 rounded-full px-3 py-1.5 text-sm active:scale-95 transition-transform"
               >
-                <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center text-base mb-2">
-                  📝
-                </div>
-                <p className="text-[13px] font-medium leading-tight line-clamp-2">{p.title}</p>
-                <p className="text-[11px] text-muted-foreground mt-1">{timeAgo(p.lastUsedAt)}</p>
+                <Hash className="size-3.5 text-muted-foreground" />
+                <span>{tag}</span>
               </button>
             ))}
           </div>
         )}
-        {recentsOpen && recentPrompts.length === 0 && (
-          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum prompt usado ainda.</p>
+      </div>
+    );
+  }
+
+  if (mobileSection === "pastas") {
+    return (
+      <div className="lg:hidden pt-4 px-5">
+        <p className="text-sm font-semibold text-foreground mb-3">Pastas</p>
+        {categories.length === 0 ? (
+          <p className="text-sm text-muted-foreground">Nenhuma pasta criada.</p>
+        ) : (
+          <CategoryCards />
+        )}
+      </div>
+    );
+  }
+
+  return (
+    <div className="lg:hidden space-y-1 pt-2">
+      <section>
+        <SectionHeader
+          label="Pastas"
+          count={categories.length}
+          isOpen={pastasOpen}
+          onToggle={() => setPastasOpen((v) => !v)}
+        />
+        {pastasOpen && categories.length > 0 && (
+          <div className="px-5 pb-3 pt-1">
+            <CategoryCards horizontal />
+          </div>
+        )}
+        {pastasOpen && categories.length === 0 && (
+          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhuma pasta criada.</p>
         )}
       </section>
 
@@ -271,6 +307,7 @@ function MobileHomeContent() {
           favoritePrompts.map((p) => (
             <MobileListRow
               key={p.id}
+              icon={<Star className="size-4 fill-primary text-primary" />}
               title={p.title}
               meta={timeAgo(p.updatedAt)}
               isFavorite
@@ -286,26 +323,24 @@ function MobileHomeContent() {
 
       <section>
         <SectionHeader
-          label="Pastas"
-          count={categories.length}
-          isOpen={pastasOpen}
-          onToggle={() => setPastasOpen((v) => !v)}
+          label="Recentes"
+          count={recentPrompts.length}
+          isOpen={recentsOpen}
+          onToggle={() => setRecentsOpen((v) => !v)}
+          onViewAll={() => setView("recent")}
         />
-        {pastasOpen &&
-          categories.map((c) => {
-            const count = prompts.filter((p) => p.categoryId === c.id && !p.isArchived).length;
-            return (
-              <MobileListRow
-                key={c.id}
-                emoji="📁"
-                title={c.name}
-                meta={String(count)}
-                onClick={() => setView("category", c.id)}
-              />
-            );
-          })}
-        {pastasOpen && categories.length === 0 && (
-          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhuma pasta criada.</p>
+        {recentsOpen &&
+          recentPrompts.map((p) => (
+            <MobileListRow
+              key={p.id}
+              icon={<Clock className="size-4" />}
+              title={p.title}
+              meta={timeAgo(p.lastUsedAt)}
+              onClick={() => setSelected(p.id)}
+            />
+          ))}
+        {recentsOpen && recentPrompts.length === 0 && (
+          <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum prompt usado ainda.</p>
         )}
       </section>
     </div>
@@ -370,6 +405,7 @@ function Page() {
     if (h < 18) return "Boa tarde";
     return "Boa noite";
   });
+  const [mobileSection, setMobileSection] = useState<MobileSection>("home");
   const [showAll, setShowAll] = useState(false);
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [sortBy, setSortBy] = useState<"recent" | "alpha" | "rating">("recent");
@@ -454,7 +490,7 @@ function Page() {
       <AppSidebar />
 
       <div className="flex-1 flex flex-col min-w-0">
-        <MobileTopNav />
+        <MobileTopNav mobileSection={mobileSection} setMobileSection={setMobileSection} />
         <AppHeader />
 
         <div className="flex-1 flex min-h-0">
@@ -465,7 +501,7 @@ function Page() {
             )}
           >
             <div className="max-w-5xl pb-24 lg:pb-4">
-              {view === "all" && !search && <MobileHomeContent />}
+              {view === "all" && !search && <MobileHomeContent mobileSection={mobileSection} />}
 
               <div className={cn(view === "all" && !search ? "hidden lg:block" : "")}>
                 {!heading ? (
