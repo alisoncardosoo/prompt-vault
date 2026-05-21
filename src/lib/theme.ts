@@ -7,12 +7,10 @@ const iconPaths = {
   light: {
     icon32: "/icon-32.png",
     icon192: "/icon-192.png",
-    appleTouch: "/icon-192.png",
   },
   dark: {
     icon32: "/icon-32-dark.png",
     icon192: "/icon-192-dark.png",
-    appleTouch: "/icon-192-dark.png",
   },
 } as const;
 
@@ -32,7 +30,6 @@ export function applyThemePreference(theme: ThemePreference) {
     const paths = isDark ? iconPaths.dark : iconPaths.light;
     setLinkHref('link[rel="icon"][sizes="32x32"]', paths.icon32);
     setLinkHref('link[rel="icon"][sizes="192x192"]', paths.icon192);
-    setLinkHref('link[rel="apple-touch-icon"]', paths.appleTouch);
 
     const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (themeColor) {
