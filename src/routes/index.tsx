@@ -874,6 +874,9 @@ function Page() {
                         </button>
                       )}
                     </div>
+                    <p className="mt-1.5 border-t border-border/30 pt-1.5">
+                      Desenvolvido por Alison Cardoso.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -895,14 +898,17 @@ function Page() {
               {buildStatusText}
             </span>
           </div>
-          {!isLikelyFresh && (
-            <button
-              onClick={forceRefreshApp}
-              className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
-            >
-              Atualizar app
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            <span>Desenvolvido por Alison Cardoso.</span>
+            {!isLikelyFresh && (
+              <button
+                onClick={forceRefreshApp}
+                className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
+              >
+                Atualizar app
+              </button>
+            )}
+          </div>
         </footer>
       </div>
 
