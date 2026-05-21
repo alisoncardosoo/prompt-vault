@@ -24,8 +24,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import logo from "@/assets/logo.png";
 import { cn } from "@/lib/utils";
+import { ThemedPromptIcon } from "@/components/app/ThemedPromptIcon";
 
 const catBg: Record<Category["color"], string> = {
   amber: "bg-cat-amber",
@@ -188,7 +188,7 @@ function SidebarInner({
       <div
         className={cn("flex items-center gap-2.5 shrink-0 p-4", collapsed && "justify-center px-0")}
       >
-        <img src={logo} alt="PromptLibrary" className="size-9 rounded-lg shadow-sm shrink-0" />
+        <ThemedPromptIcon className="size-9 shadow-sm shrink-0" />
         {!collapsed && (
           <>
             <span className="font-semibold text-[15px] flex-1">PromptLibrary</span>

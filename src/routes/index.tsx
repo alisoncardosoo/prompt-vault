@@ -21,12 +21,12 @@ import {
   X,
 } from "lucide-react";
 import { usePromptStore, timeAgo } from "@/lib/promptStore";
-import logo from "@/assets/logo.png";
 import { AppSidebar } from "@/components/app/Sidebar";
 import { AppHeader } from "@/components/app/Header";
 import { CategoryCards } from "@/components/app/CategoryCards";
 import { PromptCard } from "@/components/app/PromptCard";
 import { DetailPanel } from "@/components/app/DetailPanel";
+import { ThemedPromptIcon } from "@/components/app/ThemedPromptIcon";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -226,7 +226,7 @@ function MobileTopNav({
         onClick={() => setSidebarOpen(true)}
         className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl active:opacity-70 transition-opacity shrink-0"
       >
-        <img src={logo} alt="Menu" className="size-7 rounded-lg shadow-sm" />
+        <ThemedPromptIcon alt="Menu" className="size-7 shadow-sm" />
       </button>
 
       <div className="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-none">
@@ -587,28 +587,12 @@ function Page() {
     openEditor,
     emptyTrash,
     purgeTrashedPrompts,
-    theme,
     imageImportOpen,
     editorOpen,
     variablesOpen,
     settingsOpen,
     setImageImportOpen,
   } = usePromptStore();
-
-  useEffect(() => {
-    const root = document.documentElement;
-    if (theme === "dark") {
-      root.classList.add("dark");
-    } else if (theme === "light") {
-      root.classList.remove("dark");
-    } else {
-      const mq = window.matchMedia("(prefers-color-scheme: dark)");
-      root.classList.toggle("dark", mq.matches);
-      const listener = (e: MediaQueryListEvent) => root.classList.toggle("dark", e.matches);
-      mq.addEventListener("change", listener);
-      return () => mq.removeEventListener("change", listener);
-    }
-  }, [theme]);
 
   useEffect(() => {
     purgeTrashedPrompts();

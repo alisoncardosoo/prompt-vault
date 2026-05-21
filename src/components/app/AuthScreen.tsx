@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabaseConfigured } from "@/lib/supabase";
+import { ThemedPromptIcon } from "@/components/app/ThemedPromptIcon";
 
 type Mode = "signin" | "signup" | "forgot" | "reset";
 
@@ -93,7 +94,7 @@ export function AuthScreen() {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm text-center">
           <div className="mb-4 flex justify-center">
-            <img src="/icon-192.png" alt="PromptLibrary" className="size-16 rounded-2xl" />
+            <ThemedPromptIcon className="size-16 rounded-2xl" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">Verifique seu email</h1>
           <p className="mt-2 text-sm text-muted-foreground">{doneMessage}</p>
@@ -119,7 +120,7 @@ export function AuthScreen() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mb-4 flex justify-center">
-            <img src="/icon-192.png" alt="PromptLibrary" className="size-16 rounded-2xl" />
+            <ThemedPromptIcon className="size-16 rounded-2xl" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">PromptLibrary</h1>
           <p className="mt-2 text-sm text-muted-foreground">

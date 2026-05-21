@@ -4,6 +4,7 @@ import { Outlet, Link, createRootRouteWithContext, useRouter } from "@tanstack/r
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { AuthScreen } from "@/components/app/AuthScreen";
 import { usePromptStore } from "@/lib/promptStore";
+import { applyThemePreference } from "@/lib/theme";
 import { loadUserData, pushAllToSupabase } from "@/lib/sync";
 import { useRealtimeSync } from "@/hooks/useRealtimeSync";
 
@@ -72,10 +73,12 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function AppGate() {
   const { user, loading } = useAuth();
-  const { replaceAll, setUserId } = usePromptStore();
+  const { replaceAll, setUserId, theme } = usePromptStore();
   const synced = useRef(false);
 
   useRealtimeSync(user?.id ?? null);
+
+  useEffect(() => applyThemePreference(theme), [theme]);
 
   useEffect(() => {
     if (!user || synced.current) return;
