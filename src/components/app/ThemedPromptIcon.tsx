@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 type ThemedPromptIconProps = {
   alt?: string;
@@ -6,9 +7,5 @@ type ThemedPromptIconProps = {
 };
 
 export function ThemedPromptIcon({ alt = "Prompt Vault", className }: ThemedPromptIconProps) {
-  return (
-    <span className={cn("inline-block overflow-hidden rounded-xl", className)}>
-      <img src="/icon-192.png" alt={alt} className="size-full object-cover" />
-    </span>
-  );
+  return <img src={logo} alt={alt} className={cn("inline-block object-contain", className)} />;
 }

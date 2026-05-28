@@ -53,7 +53,7 @@ type State = {
   userName: string;
   selectedId: string | null;
   search: string;
-  view: "all" | "favorites" | "recent" | "attachments" | "category" | "tag" | "trash";
+  view: "all" | "favorites" | "recent" | "attachments" | "category" | "tag" | "tags" | "trash";
   viewArg: string | null;
   editorOpen: boolean;
   editingId: string | null;

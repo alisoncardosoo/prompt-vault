@@ -57,7 +57,7 @@ export function CategoryCards({
       className={
         horizontal
           ? "flex gap-3 overflow-x-auto pb-3 scrollbar-none"
-          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
+          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3"
       }
     >
       {visible.map((c) => {

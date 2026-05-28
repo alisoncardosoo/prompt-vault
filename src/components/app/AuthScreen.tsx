@@ -94,7 +94,7 @@ export function AuthScreen() {
       <div className="flex min-h-screen items-center justify-center bg-background px-4">
         <div className="w-full max-w-sm text-center">
           <div className="mb-4 flex justify-center">
-            <ThemedPromptIcon className="size-16 rounded-2xl" />
+            <ThemedPromptIcon className="size-16 drop-shadow-md" />
           </div>
           <h1 className="text-xl font-semibold text-foreground">Verifique seu email</h1>
           <p className="mt-2 text-sm text-muted-foreground">{doneMessage}</p>
@@ -120,7 +120,7 @@ export function AuthScreen() {
       <div className="w-full max-w-sm">
         <div className="mb-8 text-center">
           <div className="mb-4 flex justify-center">
-            <ThemedPromptIcon className="size-16 rounded-2xl" />
+            <ThemedPromptIcon className="size-16 drop-shadow-md" />
           </div>
           <h1 className="text-2xl font-bold text-foreground">Prompt Vault</h1>
           <p className="mt-2 text-sm text-muted-foreground">

@@ -14,6 +14,7 @@ import {
   ChevronDown,
   Trash2,
   Check,
+  LayoutGrid,
 } from "lucide-react";
 import { usePromptStore, type Category } from "@/lib/promptStore";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { ThemedPromptIcon } from "@/components/app/ThemedPromptIcon";
+import { TagPill } from "@/components/app/TagPill";
 
 const catBg: Record<Category["color"], string> = {
   amber: "bg-cat-amber",
@@ -153,7 +155,7 @@ function SidebarInner({
     deleteCategory,
     renameCategory,
   } = usePromptStore();
-  const tags = Array.from(new Set(prompts.flatMap((p) => p.tags))).slice(0, 8);
+  const tags = Array.from(new Set(prompts.flatMap((p) => p.tags))).sort();
   const [openSections, setOpenSections] = useState({
     biblioteca: true,
     pastas: false,
@@ -182,7 +184,21 @@ function SidebarInner({
       <div
         className={cn("flex items-center gap-2.5 shrink-0 p-4", collapsed && "justify-center px-0")}
       >
-        <ThemedPromptIcon className="size-9 shadow-sm shrink-0" />
+        {collapsed ? (
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={() => setSidebarCollapsed(false)}
+                className="rounded-xl hover:bg-sidebar-accent/60 transition-colors p-0.5"
+              >
+                <ThemedPromptIcon className="size-9 drop-shadow-sm shrink-0" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right">Expandir</TooltipContent>
+          </Tooltip>
+        ) : (
+          <ThemedPromptIcon className="size-9 drop-shadow-sm shrink-0" />
+        )}
         {!collapsed && (
           <>
             <span className="font-semibold text-[15px] flex-1">Prompt Vault</span>
@@ -220,7 +236,7 @@ function SidebarInner({
                 collapsed={collapsed}
                 active={view === "all"}
                 onClick={nav(() => setView("all"))}
-                icon={Star}
+                icon={LayoutGrid}
                 label="Todos os prompts"
                 count={counts.all}
               />
@@ -388,22 +404,30 @@ function SidebarInner({
             onToggle={() => toggleSection("tags")}
           />
           {openSections.tags && (
-            <div className="space-y-0.5 mt-1">
-              {tags.map((t) => {
-                const count = prompts.filter((p) => p.tags.includes(t)).length;
-                return (
-                  <NavItem
-                    key={t}
-                    collapsed={collapsed}
-                    active={view === "tag" && viewArg === t}
-                    onClick={nav(() => setView("tag", t))}
-                    icon={Tag}
-                    label={`#${t}`}
-                    count={count}
-                  />
-                );
-              })}
-            </div>
+            <>
+              <div className="space-y-0.5 mt-1">
+                <NavItem
+                  collapsed={collapsed}
+                  active={view === "tags"}
+                  onClick={nav(() => setView("tags"))}
+                  icon={Tag}
+                  label="Todas as tags"
+                  count={tags.length || undefined}
+                />
+              </div>
+              {!collapsed && tags.length > 0 && (
+                <div className="flex flex-wrap gap-1.5 mt-1 px-2 pb-1">
+                  {tags.map((t) => (
+                    <TagPill
+                      key={t}
+                      tag={t}
+                      active={view === "tag" && viewArg === t}
+                      onClick={nav(() => setView("tag", t))}
+                    />
+                  ))}
+                </div>
+              )}
+            </>
           )}
         </div>
 
