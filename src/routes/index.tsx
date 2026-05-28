@@ -11,7 +11,6 @@ import {
   Plus,
   Sparkles,
   ArrowLeft,
-  Hash,
   FileText,
   Home,
   Folder,
@@ -27,6 +26,7 @@ import { CategoryCards } from "@/components/app/CategoryCards";
 import { PromptCard } from "@/components/app/PromptCard";
 import { DetailPanel } from "@/components/app/DetailPanel";
 import { ThemedPromptIcon } from "@/components/app/ThemedPromptIcon";
+import { TagPill } from "@/components/app/TagPill";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -226,18 +226,22 @@ function MobileTopNav({
         onClick={() => setSidebarOpen(true)}
         className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl active:opacity-70 transition-opacity shrink-0"
       >
-        <ThemedPromptIcon alt="Menu" className="size-7 shadow-sm" />
+        <ThemedPromptIcon alt="Menu" className="size-7 drop-shadow-sm" />
       </button>
 
       <div className="flex-1 flex items-center gap-1 overflow-x-auto scrollbar-none">
         {tabs.map(({ id, label, icon: Icon }) => {
-          const isActive = mobileSection === id && view === "all";
+          const isActive = id === "tags" ? view === "tags" : mobileSection === id && view === "all";
           return (
             <button
               key={id}
               onClick={() => {
-                setMobileSection(id);
-                if (view !== "all") setView("all");
+                if (id === "tags") {
+                  setView("tags");
+                } else {
+                  setMobileSection(id);
+                  if (view !== "all") setView("all");
+                }
               }}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm transition-all duration-150 shrink-0",
@@ -422,20 +426,25 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
   if (mobileSection === "tags") {
     return (
       <div className="lg:hidden pt-4 px-5">
-        <p className="text-sm font-semibold text-foreground mb-3">Tags</p>
+        <p className="text-sm font-semibold text-foreground mb-3">
+          Tags
+          {allTags.length > 0 && (
+            <span className="ml-1.5 text-xs font-normal text-muted-foreground">
+              ({allTags.length})
+            </span>
+          )}
+        </p>
         {allTags.length === 0 ? (
           <p className="text-sm text-muted-foreground">Nenhuma tag criada.</p>
         ) : (
           <div className="flex flex-wrap gap-2">
             {allTags.map((tag) => (
-              <button
+              <TagPill
                 key={tag}
+                tag={tag}
                 onClick={() => setView("tag", tag)}
-                className="flex items-center gap-1.5 bg-muted/70 rounded-full px-3 py-1.5 text-sm active:scale-95 transition-transform"
-              >
-                <Hash className="size-3.5 text-muted-foreground" />
-                <span>{tag}</span>
-              </button>
+                className="text-xs py-1.5 px-3"
+              />
             ))}
           </div>
         )}
@@ -557,6 +566,122 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
           <p className="text-sm text-muted-foreground px-5 pb-3">Nenhum prompt usado ainda.</p>
         )}
       </section>
+    </div>
+  );
+}
+
+function TagsPage({ viewMode }: { viewMode: "grid" | "list" }) {
+  const { prompts, setView } = usePromptStore();
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+
+  const tagStats = useMemo(() => {
+    const map = new Map<string, number>();
+    prompts
+      .filter((p) => !p.isArchived)
+      .forEach((p) => p.tags.forEach((t) => map.set(t, (map.get(t) ?? 0) + 1)));
+    return Array.from(map.entries())
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([tag, count]) => ({ tag, count }));
+  }, [prompts]);
+
+  const filteredPrompts = useMemo(() => {
+    if (!activeTag) return [];
+    return prompts
+      .filter((p) => !p.isArchived && p.tags.includes(activeTag))
+      .sort((a, b) => b.updatedAt - a.updatedAt);
+  }, [prompts, activeTag]);
+
+  return (
+    <div>
+      {/* Header */}
+      <div className="mb-6 lg:mb-8">
+        <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2">
+          <Tag className="size-5 text-muted-foreground" />
+          Tags
+        </h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          {tagStats.length} {tagStats.length === 1 ? "tag" : "tags"} ·{" "}
+          {prompts.filter((p) => !p.isArchived).length} prompts
+        </p>
+      </div>
+
+      {/* Tag cloud */}
+      {tagStats.length === 0 ? (
+        <div className="text-center py-20 text-muted-foreground">
+          <Tag className="size-10 opacity-20 mx-auto mb-3" />
+          <p className="text-sm">Nenhuma tag criada ainda.</p>
+          <p className="text-xs mt-1 opacity-70">Adicione tags ao criar ou editar um prompt.</p>
+        </div>
+      ) : (
+        <>
+          <div className="flex flex-wrap gap-2 mb-8">
+            {tagStats.map(({ tag, count }) => (
+              <button
+                key={tag}
+                onClick={() => setActiveTag((prev) => (prev === tag ? null : tag))}
+                className="flex items-center gap-2 group"
+              >
+                <TagPill
+                  tag={tag}
+                  active={activeTag === tag}
+                  className="text-xs py-1.5 px-3.5 text-[12px]"
+                />
+                <span
+                  className={cn(
+                    "text-xs tabular-nums transition-colors",
+                    activeTag === tag
+                      ? "text-foreground font-semibold"
+                      : "text-muted-foreground group-hover:text-foreground",
+                  )}
+                >
+                  {count}
+                </span>
+              </button>
+            ))}
+          </div>
+
+          {/* Results */}
+          {activeTag ? (
+            <div>
+              <div className="flex items-center gap-3 mb-5 pb-4 border-b border-border/30">
+                <TagPill tag={activeTag} className="text-xs py-1.5 px-3.5 text-[12px]" />
+                <span className="text-sm text-muted-foreground">
+                  {filteredPrompts.length} {filteredPrompts.length === 1 ? "prompt" : "prompts"}
+                </span>
+                <button
+                  onClick={() => setActiveTag(null)}
+                  className="ml-auto flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  <X className="size-3" />
+                  Limpar filtro
+                </button>
+                <button
+                  onClick={() => setView("tag", activeTag)}
+                  className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Ver só essa tag →
+                </button>
+              </div>
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3"
+                    : "flex flex-col gap-2"
+                }
+              >
+                {filteredPrompts.map((p) => (
+                  <PromptCard key={p.id} prompt={p} mode={viewMode} />
+                ))}
+              </div>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center justify-center py-16 gap-2 text-muted-foreground">
+              <Tag className="size-8 opacity-20" />
+              <p className="text-sm">Selecione uma tag para ver os prompts</p>
+            </div>
+          )}
+        </>
+      )}
     </div>
   );
 }
@@ -712,172 +837,164 @@ function Page() {
               view === "all" && !search ? "px-0 md:px-7 lg:px-10" : "px-5 md:px-7 lg:px-10",
             )}
           >
-            <div className="max-w-5xl pb-24 lg:pb-4">
+            <div className="pb-24 lg:pb-4">
               {view === "all" && !search && <MobileHomeContent mobileSection={mobileSection} />}
+              {view === "tags" && <TagsPage viewMode={viewMode} />}
 
-              <div className={cn(view === "all" && !search ? "hidden lg:block" : "")}>
-                {!heading ? (
-                  <>
-                    <div className="flex items-start justify-between mb-5 lg:mb-6 gap-3">
+              {view !== "tags" && (
+                <div className={cn(view === "all" && !search ? "hidden lg:block" : "")}>
+                  {!heading ? (
+                    <>
+                      <div className="flex items-start justify-between mb-5 lg:mb-6 gap-3">
+                        <div>
+                          <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2 flex-wrap">
+                            {greeting}, {userName} <span className="text-xl lg:text-2xl">👋</span>
+                          </h1>
+                          <p className="text-sm text-muted-foreground mt-1">
+                            {prompts.length} prompts em {categories.length} pastas.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <div className="flex bg-muted/60 rounded-xl p-0.5">
+                            <button
+                              onClick={() => setViewMode("grid")}
+                              className={cn(
+                                "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
+                                viewMode === "grid"
+                                  ? "bg-card shadow-sm text-foreground"
+                                  : "text-muted-foreground",
+                              )}
+                            >
+                              <LayoutGrid className="size-4" />
+                            </button>
+                            <button
+                              onClick={() => setViewMode("list")}
+                              className={cn(
+                                "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
+                                viewMode === "list"
+                                  ? "bg-card shadow-sm text-foreground"
+                                  : "text-muted-foreground",
+                              )}
+                            >
+                              <List className="size-4" />
+                            </button>
+                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="hidden sm:flex items-center gap-1.5 bg-transparent hover:bg-muted/60 rounded-xl px-3 py-1.5 text-sm transition-colors">
+                                {SORT_LABELS[sortBy]} <ChevronDown className="size-3.5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {(Object.keys(SORT_LABELS) as (keyof typeof SORT_LABELS)[]).map(
+                                (key) => (
+                                  <DropdownMenuItem
+                                    key={key}
+                                    onClick={() => setSortBy(key)}
+                                    className={sortBy === key ? "font-medium text-primary" : ""}
+                                  >
+                                    {SORT_LABELS[key]}
+                                  </DropdownMenuItem>
+                                ),
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </div>
+                      </div>
+
+                      <div className="hidden md:block">
+                        {showFolders ? (
+                          <div>
+                            <div className="flex items-center gap-3 mb-5">
+                              <button
+                                onClick={() => setShowFolders(false)}
+                                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <ArrowLeft className="size-3.5" /> Voltar
+                              </button>
+                              <h2 className="text-base font-semibold">
+                                Todas as pastas
+                                <span className="ml-1.5 text-sm font-normal text-muted-foreground">
+                                  ({categories.length})
+                                </span>
+                              </h2>
+                            </div>
+                            <CategoryCards />
+                          </div>
+                        ) : (
+                          <CategoryCards />
+                        )}
+                      </div>
+
+                      {!showFolders && (
+                        <div className="mt-6 lg:mt-8 mb-4">
+                          <h2 className="text-base font-semibold">Prompts recentes</h2>
+                        </div>
+                      )}
+                    </>
+                  ) : (
+                    <div className="mb-5 lg:mb-6 flex items-start justify-between gap-3">
                       <div>
-                        <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2 flex-wrap">
-                          {greeting}, {userName} <span className="text-xl lg:text-2xl">👋</span>
+                        <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2">
+                          {view === "trash" && <Trash2 className="size-5 text-muted-foreground" />}
+                          {heading}
                         </h1>
                         <p className="text-sm text-muted-foreground mt-1">
-                          {prompts.length} prompts em {categories.length} pastas.
+                          {view === "trash"
+                            ? `${filtered.length} itens · excluídos automaticamente após 30 dias`
+                            : `${filtered.length} prompts`}
                         </p>
                       </div>
-                      <div className="flex items-center gap-2 shrink-0">
-                        <div className="flex bg-muted/60 rounded-xl p-0.5">
-                          <button
-                            onClick={() => setViewMode("grid")}
-                            className={cn(
-                              "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
-                              viewMode === "grid"
-                                ? "bg-card shadow-sm text-foreground"
-                                : "text-muted-foreground",
-                            )}
-                          >
-                            <LayoutGrid className="size-4" />
-                          </button>
-                          <button
-                            onClick={() => setViewMode("list")}
-                            className={cn(
-                              "min-w-[44px] min-h-[44px] lg:min-w-0 lg:min-h-0 lg:p-1.5 flex items-center justify-center rounded-lg transition-all duration-150",
-                              viewMode === "list"
-                                ? "bg-card shadow-sm text-foreground"
-                                : "text-muted-foreground",
-                            )}
-                          >
-                            <List className="size-4" />
-                          </button>
-                        </div>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <button className="hidden sm:flex items-center gap-1.5 bg-transparent hover:bg-muted/60 rounded-xl px-3 py-1.5 text-sm transition-colors">
-                              {SORT_LABELS[sortBy]} <ChevronDown className="size-3.5" />
-                            </button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
-                            {(Object.keys(SORT_LABELS) as (keyof typeof SORT_LABELS)[]).map(
-                              (key) => (
-                                <DropdownMenuItem
-                                  key={key}
-                                  onClick={() => setSortBy(key)}
-                                  className={sortBy === key ? "font-medium text-primary" : ""}
-                                >
-                                  {SORT_LABELS[key]}
-                                </DropdownMenuItem>
-                              ),
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </div>
-                    </div>
-
-                    <div className="hidden md:block">
-                      {showFolders ? (
-                        <div>
-                          <div className="flex items-center gap-3 mb-5">
-                            <button
-                              onClick={() => setShowFolders(false)}
-                              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
-                            >
-                              <ArrowLeft className="size-3.5" /> Voltar
-                            </button>
-                            <h2 className="text-base font-semibold">
-                              Todas as pastas
-                              <span className="ml-1.5 text-sm font-normal text-muted-foreground">
-                                ({categories.length})
-                              </span>
-                            </h2>
-                          </div>
-                          <CategoryCards />
-                        </div>
-                      ) : (
-                        <>
-                          <CategoryCards limit={5} />
-                          {categories.length > 5 && (
-                            <button
-                              onClick={() => setShowFolders(true)}
-                              className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                            >
-                              Ver mais {categories.length - 5} pasta
-                              {categories.length - 5 > 1 ? "s" : ""} →
-                            </button>
-                          )}
-                        </>
+                      {view === "trash" && filtered.length > 0 && (
+                        <button
+                          onClick={() => {
+                            if (confirm("Esvaziar lixeira permanentemente?")) emptyTrash();
+                          }}
+                          className="shrink-0 text-sm text-destructive/70 hover:text-destructive border border-destructive/20 hover:border-destructive/50 rounded-lg px-3 py-1.5 min-h-[44px] transition-colors"
+                        >
+                          Esvaziar lixeira
+                        </button>
                       )}
                     </div>
+                  )}
 
-                    {!showFolders && (
-                      <div className="mt-6 lg:mt-8 mb-4">
-                        <h2 className="text-base font-semibold">Prompts recentes</h2>
-                      </div>
-                    )}
-                  </>
-                ) : (
-                  <div className="mb-5 lg:mb-6 flex items-start justify-between gap-3">
-                    <div>
-                      <h1 className="text-xl lg:text-2xl font-semibold flex items-center gap-2">
-                        {view === "trash" && <Trash2 className="size-5 text-muted-foreground" />}
-                        {heading}
-                      </h1>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        {view === "trash"
-                          ? `${filtered.length} itens · excluídos automaticamente após 30 dias`
-                          : `${filtered.length} prompts`}
-                      </p>
-                    </div>
-                    {view === "trash" && filtered.length > 0 && (
-                      <button
-                        onClick={() => {
-                          if (confirm("Esvaziar lixeira permanentemente?")) emptyTrash();
-                        }}
-                        className="shrink-0 text-sm text-destructive/70 hover:text-destructive border border-destructive/20 hover:border-destructive/50 rounded-lg px-3 py-1.5 min-h-[44px] transition-colors"
-                      >
-                        Esvaziar lixeira
-                      </button>
-                    )}
-                  </div>
-                )}
+                  {!showFolders && (
+                    <>
+                      {filtered.length === 0 ? (
+                        <div className="text-center text-sm text-muted-foreground py-20">
+                          {view === "trash" ? "A lixeira está vazia." : "Nenhum prompt aqui ainda."}
+                        </div>
+                      ) : (
+                        <div
+                          className={
+                            viewMode === "grid"
+                              ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3"
+                              : "flex flex-col gap-2"
+                          }
+                        >
+                          {(showAll ? filtered : filtered.slice(0, 12)).map((p) => (
+                            <PromptCard
+                              key={p.id}
+                              prompt={p}
+                              mode={viewMode}
+                              inTrash={view === "trash"}
+                            />
+                          ))}
+                        </div>
+                      )}
 
-                {!showFolders && (
-                  <>
-                    {filtered.length === 0 ? (
-                      <div className="text-center text-sm text-muted-foreground py-20">
-                        {view === "trash" ? "A lixeira está vazia." : "Nenhum prompt aqui ainda."}
-                      </div>
-                    ) : (
-                      <div
-                        className={
-                          viewMode === "grid"
-                            ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
-                            : "flex flex-col gap-2"
-                        }
-                      >
-                        {(showAll ? filtered : filtered.slice(0, 12)).map((p) => (
-                          <PromptCard
-                            key={p.id}
-                            prompt={p}
-                            mode={viewMode}
-                            inTrash={view === "trash"}
-                          />
-                        ))}
-                      </div>
-                    )}
-
-                    {!showAll && filtered.length > 12 && (
-                      <button
-                        onClick={() => setShowAll(true)}
-                        className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm rounded-2xl shadow-sm hover:bg-card/80 min-h-[48px] transition-all duration-150"
-                      >
-                        Mostrar mais {filtered.length - 12} prompts
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
+                      {!showAll && filtered.length > 12 && (
+                        <button
+                          onClick={() => setShowAll(true)}
+                          className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm rounded-2xl shadow-sm hover:bg-card/80 min-h-[48px] transition-all duration-150"
+                        >
+                          Mostrar mais {filtered.length - 12} prompts
+                        </button>
+                      )}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           </main>
 

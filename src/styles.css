@@ -116,6 +116,12 @@
   --cat-sky: oklch(0.30 0.04 225);
   --cat-mint: oklch(0.30 0.05 155);
   --cat-rose: oklch(0.30 0.04 18);
+
+  --tag-amber: oklch(0.30 0.10 72);
+  --tag-lavender: oklch(0.30 0.09 295);
+  --tag-sky: oklch(0.30 0.07 225);
+  --tag-mint: oklch(0.30 0.08 155);
+  --tag-rose: oklch(0.30 0.07 18);
 }
 
 @layer base {
@@ -126,6 +132,10 @@
   }
   *::-webkit-scrollbar {
     display: none;
+  }
+  /* html background fills the PWA titlebar area (Safari macOS standalone mode) */
+  html {
+    background-color: #1a1a1a;
   }
   body {
     background-color: var(--color-background);

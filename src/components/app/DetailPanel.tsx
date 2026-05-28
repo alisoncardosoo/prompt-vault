@@ -22,9 +22,11 @@ import {
   File,
   ChevronLeft,
   ChevronRight,
+  Clock,
 } from "lucide-react";
-import { usePromptStore, type Prompt } from "@/lib/promptStore";
+import { usePromptStore, type Prompt, timeAgo } from "@/lib/promptStore";
 import { TagPill } from "./TagPill";
+import { ThemedPromptIcon } from "./ThemedPromptIcon";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import {
@@ -78,6 +80,7 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
     markUsed,
     savePrompt,
     setSelected,
+    categories,
   } = usePromptStore();
   const { user } = useAuth();
   const [addingTag, setAddingTag] = useState(false);
@@ -87,6 +90,10 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
   const [lightbox, setLightbox] = useState<{ index: number } | null>(null);
   const tagInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const category = categories.find((c) => c.id === p.categoryId);
+  const firstImage = p.attachments.find((a) => a.type.startsWith("image/"));
+  const heroImageUrl = firstImage?.url || firstImage?.data;
 
   useEffect(() => {
     if (!lightbox) return;
@@ -172,7 +179,7 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
 
   return (
     <>
-      {/* Mobile drag handle + close button */}
+      {/* Mobile drag handle */}
       <div className="lg:hidden flex items-center justify-between pt-3 pb-2 px-4 shrink-0">
         <button
           onClick={() => setSelected(null)}
@@ -185,71 +192,118 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
         <div className="w-9" />
       </div>
 
-      {/* Accent bar — desktop only */}
-      <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary hidden lg:block" />
+      {/* Hero banner — mirrors the card's image area but taller */}
+      <div className="relative h-[130px] shrink-0 overflow-hidden bg-muted/40">
+        {heroImageUrl ? (
+          <>
+            <img src={heroImageUrl} alt="" className="w-full h-full object-cover" />
+            <div className="absolute inset-0 bg-gradient-to-t from-card/80 via-card/10 to-transparent" />
+          </>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <ThemedPromptIcon className="size-16 opacity-[0.12]" />
+          </div>
+        )}
 
-      {/* Header */}
-      <div className="px-4 lg:px-5 lg:pl-7 py-4 flex items-start justify-between gap-2 border-b border-border shrink-0">
-        <h2 className="font-semibold text-[17px] lg:text-[19px] leading-tight flex-1 pr-1">
-          {p.title}
-        </h2>
-        <div className="flex items-center gap-0.5 shrink-0">
-          <button
-            onClick={() => setSelected(null)}
-            aria-label="Fechar"
-            className="hidden lg:flex p-2 rounded-lg hover:bg-muted transition-colors min-w-[36px] min-h-[36px] items-center justify-center"
-          >
-            <X className="size-4 text-muted-foreground" />
-          </button>
+        {/* Category badge */}
+        {category && (
+          <div className="absolute bottom-3 left-4">
+            <span className="text-[11px] font-medium px-2.5 py-0.5 rounded-full bg-background/70 backdrop-blur-sm text-foreground/70 border border-border/30">
+              {category.name}
+            </span>
+          </div>
+        )}
+
+        {/* Favorite + close */}
+        <div className="absolute top-2.5 right-2.5 flex items-center gap-1">
           <button
             onClick={() => toggleFavorite(p.id)}
-            className="p-2 rounded-lg hover:bg-muted transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"
+            className="size-8 flex items-center justify-center rounded-lg bg-background/65 backdrop-blur-sm text-foreground/70 hover:bg-background/85 transition-colors"
           >
             <Star
               className={cn(
-                "size-4.5",
-                p.isFavorite ? "fill-primary text-primary" : "text-muted-foreground",
+                "size-4",
+                p.isFavorite ? "fill-amber-400 text-amber-400" : "text-foreground/60",
               )}
             />
           </button>
-          <Button variant="ghost" size="icon" className="size-9 lg:size-8" onClick={handleShare}>
-            {shared ? <Check className="size-4 text-green-500" /> : <Share2 className="size-4" />}
-          </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="size-9 lg:size-8">
-                <MoreHorizontal className="size-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => openEditor(p.id)}>
-                <Pencil className="size-4 mr-2" /> Editar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => duplicatePrompt(p.id)}>
-                <Files className="size-4 mr-2" /> Duplicar
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => savePrompt({ ...p, isArchived: !p.isArchived })}>
-                <Archive className="size-4 mr-2" /> {p.isArchived ? "Desarquivar" : "Arquivar"}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem
-                className="text-destructive focus:text-destructive"
-                onClick={() => {
-                  if (confirm("Mover para a lixeira?")) {
-                    deletePrompt(p.id);
-                    setSelected(null);
-                  }
-                }}
-              >
-                <Trash2 className="size-4 mr-2" /> Mover para lixeira
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <button
+            onClick={() => setSelected(null)}
+            aria-label="Fechar"
+            className="hidden lg:flex size-8 items-center justify-center rounded-lg bg-background/65 backdrop-blur-sm text-foreground/70 hover:bg-background/85 transition-colors"
+          >
+            <X className="size-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Title + actions */}
+      <div className="px-5 pt-4 pb-3.5 border-b border-border/50 shrink-0">
+        <div className="flex items-start gap-2">
+          <h2 className="font-semibold text-[17px] lg:text-[18px] leading-snug flex-1">
+            {p.title}
+          </h2>
+          <div className="flex items-center gap-0.5 shrink-0 -mt-0.5">
+            <Button variant="ghost" size="icon" className="size-8" onClick={handleShare}>
+              {shared ? <Check className="size-4 text-green-500" /> : <Share2 className="size-4" />}
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="size-8">
+                  <MoreHorizontal className="size-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end">
+                <DropdownMenuItem onClick={() => openEditor(p.id)}>
+                  <Pencil className="size-4 mr-2" /> Editar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => duplicatePrompt(p.id)}>
+                  <Files className="size-4 mr-2" /> Duplicar
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => savePrompt({ ...p, isArchived: !p.isArchived })}>
+                  <Archive className="size-4 mr-2" />
+                  {p.isArchived ? "Desarquivar" : "Arquivar"}
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  className="text-destructive focus:text-destructive"
+                  onClick={() => {
+                    if (confirm("Mover para a lixeira?")) {
+                      deletePrompt(p.id);
+                      setSelected(null);
+                    }
+                  }}
+                >
+                  <Trash2 className="size-4 mr-2" /> Mover para lixeira
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </div>
+
+        {/* Metadata */}
+        <div className="flex items-center gap-1.5 mt-2 text-[11px] text-muted-foreground flex-wrap">
+          <Clock className="size-3 shrink-0" />
+          <span>{timeAgo(p.updatedAt)}</span>
+          {p.lastUsedAt && (
+            <>
+              <span className="opacity-40">·</span>
+              <span>usado {timeAgo(p.lastUsedAt)}</span>
+            </>
+          )}
+          {p.attachments.length > 0 && (
+            <>
+              <span className="opacity-40">·</span>
+              <span>
+                {p.attachments.length} {p.attachments.length === 1 ? "anexo" : "anexos"}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
       {/* Scrollable body */}
-      <div className="flex-1 overflow-y-auto px-4 lg:px-5 lg:pl-7 py-4 space-y-5">
+      <div className="flex-1 overflow-y-auto px-5 py-4 space-y-5">
         {/* Tags */}
         <div className="flex flex-wrap gap-1.5 items-center">
           {p.tags.map((t) => (
@@ -290,97 +344,106 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
         </div>
 
         {/* Description */}
-        <section>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-            Descrição
-          </h3>
-          <p className="text-sm leading-relaxed">{p.description}</p>
-        </section>
+        {p.description && (
+          <p className="text-sm text-muted-foreground leading-relaxed">{p.description}</p>
+        )}
 
-        {/* Content */}
-        <section>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Conteúdo
-          </h3>
-          <div className="relative">
-            <pre
-              className={cn(
-                "bg-code-bg text-code-fg rounded-xl p-4 pr-10 text-[12.5px] font-mono leading-relaxed whitespace-pre-wrap break-words overflow-y-auto",
-                expanded ? "max-h-none" : "max-h-[260px] lg:max-h-[380px]",
-              )}
-            >
-              {p.content.split(/(\{\{[^}]+\}\})/g).map((part, i) =>
-                part.match(/^\{\{[^}]+\}\}$/) ? (
-                  <span key={i} className="text-primary">
-                    {part}
-                  </span>
-                ) : (
-                  <span key={i}>{part}</span>
-                ),
-              )}
-            </pre>
+        {/* Content — editor-style block */}
+        <div className="rounded-xl overflow-hidden border border-border/40 shadow-sm">
+          <div className="flex items-center justify-between px-3.5 py-2.5 bg-[oklch(0.19_0.008_240)] border-b border-white/[0.06]">
+            <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-1.5">
+                <div className="size-2.5 rounded-full bg-[#ff5f57]/60" />
+                <div className="size-2.5 rounded-full bg-[#febc2e]/60" />
+                <div className="size-2.5 rounded-full bg-[#28c840]/60" />
+              </div>
+              <span className="text-[11px] text-white/25 font-mono">prompt.txt</span>
+            </div>
             <button
               onClick={() => setExpanded((v) => !v)}
-              className="absolute top-2 right-2 size-7 rounded-md bg-white/10 text-white/70 flex items-center justify-center hover:bg-white/20"
+              className="size-6 rounded-md text-white/35 flex items-center justify-center hover:text-white/65 hover:bg-white/10 transition-colors"
             >
-              {expanded ? <Minimize2 className="size-3.5" /> : <Maximize2 className="size-3.5" />}
+              {expanded ? <Minimize2 className="size-3" /> : <Maximize2 className="size-3" />}
             </button>
           </div>
-        </section>
+          <pre
+            className={cn(
+              "bg-code-bg text-code-fg px-4 py-3.5 text-[12.5px] font-mono leading-relaxed whitespace-pre-wrap break-words overflow-y-auto",
+              expanded ? "max-h-none" : "max-h-[260px] lg:max-h-[360px]",
+            )}
+          >
+            {p.content.split(/(\{\{[^}]+\}\})/g).map((part, i) =>
+              part.match(/^\{\{[^}]+\}\}$/) ? (
+                <span key={i} className="text-primary">
+                  {part}
+                </span>
+              ) : (
+                <span key={i}>{part}</span>
+              ),
+            )}
+          </pre>
+        </div>
 
         {/* Attachments */}
-        <section>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">
-            Anexos
-          </h3>
-          <div className="grid grid-cols-4 gap-2">
-            {p.attachments.map((a, i) => (
-              <button
-                key={a.id}
-                onClick={() => setLightbox({ index: i })}
-                className="aspect-square bg-muted border border-border rounded-lg overflow-hidden flex flex-col items-center justify-center text-[10px] text-center relative group hover:ring-2 hover:ring-primary/50 transition-all"
-              >
-                {a.type.startsWith("image/") && getAttachmentPreviewUrl(a) ? (
-                  <>
-                    <img
-                      src={getAttachmentPreviewUrl(a) ?? undefined}
-                      alt={a.name}
-                      className="w-full h-full object-cover"
-                    />
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end p-1">
-                      <span className="text-white text-[10px] truncate w-full opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
-                        {a.name}
-                      </span>
+        {p.attachments.length > 0 && (
+          <section>
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+                Anexos
+              </span>
+              <div className="flex-1 h-px bg-border/50" />
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {p.attachments.map((a, i) => (
+                <button
+                  key={a.id}
+                  onClick={() => setLightbox({ index: i })}
+                  className="aspect-square bg-muted border border-border rounded-lg overflow-hidden flex flex-col items-center justify-center text-[10px] text-center relative group hover:ring-2 hover:ring-primary/50 transition-all"
+                >
+                  {a.type.startsWith("image/") && getAttachmentPreviewUrl(a) ? (
+                    <>
+                      <img
+                        src={getAttachmentPreviewUrl(a) ?? undefined}
+                        alt={a.name}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-end p-1">
+                        <span className="text-white text-[10px] truncate w-full opacity-0 group-hover:opacity-100 transition-opacity leading-tight">
+                          {a.name}
+                        </span>
+                      </div>
+                    </>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center gap-1 p-2 w-full">
+                      <AttachmentIcon type={a.type} />
+                      <span className="truncate w-full">{a.name}</span>
+                      <span className="text-muted-foreground">{(a.size / 1024).toFixed(0)} KB</span>
+                      {!isAttachmentSynced(a) && (
+                        <span className="text-[9px] text-amber-600">não sincronizado</span>
+                      )}
                     </div>
-                  </>
-                ) : (
-                  <div className="flex flex-col items-center justify-center gap-1 p-2 w-full">
-                    <AttachmentIcon type={a.type} />
-                    <span className="truncate w-full">{a.name}</span>
-                    <span className="text-muted-foreground">{(a.size / 1024).toFixed(0)} KB</span>
-                    {!isAttachmentSynced(a) && (
-                      <span className="text-[9px] text-amber-600">não sincronizado</span>
-                    )}
-                  </div>
-                )}
-              </button>
-            ))}
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              className="hidden"
-              onChange={handleAddAttachment}
-            />
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              className="aspect-square border border-dashed border-border rounded-lg flex flex-col items-center justify-center text-xs text-muted-foreground hover:bg-muted"
-            >
-              <Plus className="size-4 mb-1" />
-              Adicionar
-            </button>
-          </div>
-        </section>
+                  )}
+                </button>
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Add attachment */}
+        <input
+          ref={fileInputRef}
+          type="file"
+          multiple
+          className="hidden"
+          onChange={handleAddAttachment}
+        />
+        <button
+          onClick={() => fileInputRef.current?.click()}
+          className="w-full py-2.5 border border-dashed border-border/60 rounded-xl flex items-center justify-center gap-2 text-[12px] text-muted-foreground hover:bg-muted/40 hover:border-border transition-colors"
+        >
+          <Plus className="size-3.5" />
+          Adicionar anexo
+        </button>
       </div>
 
       {/* Lightbox */}
@@ -393,7 +456,6 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
               className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center"
               onClick={() => setLightbox(null)}
             >
-              {/* prev button */}
               {total > 1 && (
                 <button
                   className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10"
@@ -405,8 +467,6 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
                   <ChevronLeft className="size-5" />
                 </button>
               )}
-
-              {/* content */}
               <div
                 className="relative flex items-center justify-center max-w-[90vw] max-h-[90vh]"
                 onClick={(e) => e.stopPropagation()}
@@ -434,8 +494,6 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
                   </div>
                 )}
               </div>
-
-              {/* next button */}
               {total > 1 && (
                 <button
                   className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors z-10"
@@ -447,16 +505,12 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
                   <ChevronRight className="size-5" />
                 </button>
               )}
-
-              {/* close button */}
               <button
                 className="absolute top-3 right-3 size-9 rounded-full bg-white/10 hover:bg-white/20 flex items-center justify-center text-white transition-colors"
                 onClick={() => setLightbox(null)}
               >
                 <X className="size-4" />
               </button>
-
-              {/* counter */}
               {total > 1 && (
                 <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/60 text-xs bg-black/40 px-3 py-1 rounded-full">
                   {lightbox.index + 1} / {total}
@@ -467,42 +521,42 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
         })()}
 
       {/* Action bar */}
-      <div className="px-4 lg:px-5 lg:pl-7 py-3 lg:py-4 border-t border-border flex items-center gap-2 shrink-0">
-        <Button
-          onClick={handleCopy}
-          className="flex-1 bg-primary text-primary-foreground hover:bg-primary/90 h-11 lg:h-10 gap-2 shadow-sm"
-        >
-          <Copy className="size-4" /> Copiar
+      <div className="px-4 py-3.5 border-t border-border/50 shrink-0 space-y-2">
+        <Button onClick={handleCopy} className="w-full h-11 gap-2 font-medium shadow-sm">
+          <Copy className="size-4" />
+          Copiar Prompt
         </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-11 lg:size-10"
-          onClick={() => openEditor(p.id)}
-        >
-          <Pencil className="size-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-11 lg:size-10"
-          onClick={() => duplicatePrompt(p.id)}
-        >
-          <Files className="size-4" />
-        </Button>
-        <Button
-          variant="outline"
-          size="icon"
-          className="size-11 lg:size-10 text-destructive hover:text-destructive"
-          onClick={() => {
-            if (confirm("Deletar este prompt?")) {
-              deletePrompt(p.id);
-              setSelected(null);
-            }
-          }}
-        >
-          <Trash2 className="size-4" />
-        </Button>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            className="flex-1 h-9 gap-1.5 text-[13px]"
+            onClick={() => openEditor(p.id)}
+          >
+            <Pencil className="size-3.5" />
+            Editar
+          </Button>
+          <Button
+            variant="outline"
+            className="flex-1 h-9 gap-1.5 text-[13px]"
+            onClick={() => duplicatePrompt(p.id)}
+          >
+            <Files className="size-3.5" />
+            Duplicar
+          </Button>
+          <Button
+            variant="outline"
+            size="icon"
+            className="size-9 shrink-0 text-destructive/60 hover:text-destructive hover:border-destructive/40"
+            onClick={() => {
+              if (confirm("Deletar este prompt?")) {
+                deletePrompt(p.id);
+                setSelected(null);
+              }
+            }}
+          >
+            <Trash2 className="size-3.5" />
+          </Button>
+        </div>
       </div>
     </>
   );
@@ -515,14 +569,14 @@ export function DetailPanel() {
 
   return (
     <>
-      {/* Desktop: permanent side panel — only shown when a prompt is selected */}
+      {/* Desktop: permanent side panel */}
       {p && (
         <aside className="hidden lg:flex w-[420px] shrink-0 border-l border-border bg-card flex-col h-full relative">
           <PromptDetail prompt={p} />
         </aside>
       )}
 
-      {/* Mobile/Tablet: bottom sheet — only open when not on desktop */}
+      {/* Mobile/Tablet: bottom sheet */}
       <Sheet open={!isDesktop && !!selectedId} onOpenChange={(open) => !open && setSelected(null)}>
         <SheetContent
           side="bottom"

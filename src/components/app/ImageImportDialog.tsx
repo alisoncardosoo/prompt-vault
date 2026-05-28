@@ -106,7 +106,15 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
         type: p.type,
         data: p.data,
       }));
-      let uploadedAttachments = attachmentDrafts;
+      let uploadedAttachments: {
+        id: string;
+        name: string;
+        size: number;
+        type: string;
+        path?: string;
+        url?: string;
+        data?: string;
+      }[] = attachmentDrafts;
 
       if (user?.id && attachmentDrafts.length > 0) {
         try {

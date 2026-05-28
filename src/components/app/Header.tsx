@@ -1,10 +1,22 @@
-import { Search, Plus, Menu, Sparkles } from "lucide-react";
+import { Search, Plus, Menu, Sparkles, Sun, Moon } from "lucide-react";
 import { usePromptStore } from "@/lib/promptStore";
 import { Button } from "@/components/ui/button";
 
 export function AppHeader() {
-  const { search, setSearch, openEditor, setCommandOpen, setSidebarOpen, setImageImportOpen } =
-    usePromptStore();
+  const {
+    search,
+    setSearch,
+    openEditor,
+    setCommandOpen,
+    setSidebarOpen,
+    setImageImportOpen,
+    theme,
+    setTheme,
+  } = usePromptStore();
+
+  const isDark =
+    theme === "dark" || (theme === "system" && document.documentElement.classList.contains("dark"));
+  const toggleTheme = () => setTheme(isDark ? "light" : "dark");
 
   const handleExport = () => {
     const s = usePromptStore.getState();
@@ -52,6 +64,17 @@ export function AppHeader() {
           ⌘K
         </kbd>
       </div>
+
+      {/* Toggle tema */}
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={toggleTheme}
+        className="h-9 w-9 shrink-0 text-muted-foreground hover:text-foreground transition-colors"
+        title={isDark ? "Mudar para tema claro" : "Mudar para tema escuro"}
+      >
+        {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      </Button>
 
       {/* Importar imagem */}
       <Button

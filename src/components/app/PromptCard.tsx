@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 import { type Prompt, type TrashedPrompt, usePromptStore, timeAgo } from "@/lib/promptStore";
 import { TagPill } from "./TagPill";
+import { ThemedPromptIcon } from "./ThemedPromptIcon";
 import { cn } from "@/lib/utils";
 import {
   DropdownMenu,
@@ -69,7 +70,7 @@ export function PromptCard({
       <Star
         className={cn(
           "size-4 transition-colors",
-          prompt.isFavorite ? "fill-primary text-primary" : "text-muted-foreground/40",
+          prompt.isFavorite ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40",
         )}
       />
     </button>
@@ -196,42 +197,63 @@ export function PromptCard({
     );
   }
 
+  const firstImage = prompt.attachments.find((a) => a.type.startsWith("image/"));
+  const imageUrl = firstImage?.url || firstImage?.data;
+
   return (
     <article
       {...sharedProps}
       className={cn(
-        "text-left bg-card/90 rounded-[20px] p-5 shadow-sm shadow-black/[0.06] hover:shadow-md hover:shadow-black/[0.10] hover:-translate-y-0.5 transition-all duration-200 flex flex-col gap-3 min-h-[180px] active:scale-[0.99] active:shadow-sm",
+        "text-left bg-card/90 rounded-[16px] shadow-sm shadow-black/[0.06] hover:shadow-md hover:shadow-black/[0.10] hover:-translate-y-0.5 transition-all duration-200 flex flex-col h-[310px] overflow-hidden active:scale-[0.99] active:shadow-sm",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
         selected && "ring-2 ring-primary/40",
         inTrash && "opacity-70",
       )}
     >
-      <div className="flex items-start justify-between gap-2">
-        <h3 className="font-semibold text-base lg:text-[15px] leading-tight">{prompt.title}</h3>
-        {!inTrash && <FavBtn />}
-      </div>
-
-      <div className="flex flex-wrap gap-1">
-        {prompt.tags.map((t) => (
-          <TagPill key={t} tag={t} />
-        ))}
-      </div>
-
-      <p className="text-[13px] text-muted-foreground line-clamp-3 flex-1">{prompt.description}</p>
-
-      <div className="flex items-center justify-between text-xs text-muted-foreground pt-1">
-        {inTrash && daysLeft !== null ? (
-          <span className="text-destructive/70 font-medium">Expira em {daysLeft}d</span>
+      {/* Image / icon banner */}
+      <div className="h-[90px] shrink-0 relative bg-[#2e2e2e] flex items-center justify-center overflow-hidden">
+        {imageUrl ? (
+          <img src={imageUrl} alt="" className="w-full h-full object-cover" />
         ) : (
-          <div className="flex items-center gap-1">
-            <Paperclip className="size-3.5" />
-            <span>{prompt.attachments.length}</span>
+          <ThemedPromptIcon className="size-9 opacity-30" />
+        )}
+        {!inTrash && (
+          <div className="absolute top-1 right-1">
+            <FavBtn />
           </div>
         )}
-        <span>{timeAgo(prompt.updatedAt)}</span>
-        <div className="flex items-center gap-0.5">
-          {!inTrash && <ShareBtn />}
-          <CardMenu />
+      </div>
+
+      {/* Content */}
+      <div className="flex flex-col flex-1 p-3 gap-1.5">
+        <h3 className="font-semibold text-[12px] leading-tight line-clamp-1 shrink-0">
+          {prompt.title}
+        </h3>
+
+        {/* Tags — até 2 linhas */}
+        {inTrash && daysLeft !== null ? (
+          <span className="text-[11px] text-destructive/70 font-medium shrink-0">
+            Expira em {daysLeft}d
+          </span>
+        ) : (
+          <div className="flex flex-wrap gap-1 max-h-[56px] overflow-hidden shrink-0">
+            {prompt.tags.map((t) => (
+              <TagPill key={t} tag={t} />
+            ))}
+          </div>
+        )}
+
+        <p className="text-[11px] text-muted-foreground line-clamp-3 shrink-0 leading-[1.45]">
+          {prompt.description}
+        </p>
+
+        {/* Footer sempre visível no fundo via mt-auto */}
+        <div className="mt-auto shrink-0 flex items-center justify-between text-[11px] text-muted-foreground pt-1 border-t border-border/30">
+          <span className="tabular-nums">{timeAgo(prompt.updatedAt)}</span>
+          <div className="flex items-center gap-0.5">
+            {!inTrash && <ShareBtn />}
+            <CardMenu />
+          </div>
         </div>
       </div>
     </article>
