@@ -42,9 +42,16 @@ const styles: Record<string, { bg: string; bgCard: string; icon: typeof Folder; 
     },
   };
 
-export function CategoryCards({ horizontal = false }: { horizontal?: boolean }) {
+export function CategoryCards({
+  horizontal = false,
+  limit,
+}: {
+  horizontal?: boolean;
+  limit?: number;
+}) {
   const { categories, prompts, setView, renameCategory, setCategoryColor, deleteCategory } =
     usePromptStore();
+  const visible = limit ? categories.slice(0, limit) : categories;
   return (
     <div
       className={
@@ -53,7 +60,7 @@ export function CategoryCards({ horizontal = false }: { horizontal?: boolean }) 
           : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3"
       }
     >
-      {categories.map((c) => {
+      {visible.map((c) => {
         const s = styles[c.color];
         const Icon = s.icon;
         const count = prompts.filter((p) => p.categoryId === c.id).length;

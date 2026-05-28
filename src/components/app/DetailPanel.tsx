@@ -172,9 +172,17 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
 
   return (
     <>
-      {/* Mobile drag handle */}
-      <div className="lg:hidden flex justify-center pt-3 pb-2 shrink-0">
+      {/* Mobile drag handle + close button */}
+      <div className="lg:hidden flex items-center justify-between pt-3 pb-2 px-4 shrink-0">
+        <button
+          onClick={() => setSelected(null)}
+          aria-label="Fechar"
+          className="min-w-[36px] min-h-[36px] flex items-center justify-center rounded-xl text-muted-foreground active:bg-muted/60 transition-colors"
+        >
+          <X className="size-4" />
+        </button>
         <div className="w-10 h-1 rounded-full bg-border" />
+        <div className="w-9" />
       </div>
 
       {/* Accent bar — desktop only */}
@@ -186,6 +194,13 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
           {p.title}
         </h2>
         <div className="flex items-center gap-0.5 shrink-0">
+          <button
+            onClick={() => setSelected(null)}
+            aria-label="Fechar"
+            className="hidden lg:flex p-2 rounded-lg hover:bg-muted transition-colors min-w-[36px] min-h-[36px] items-center justify-center"
+          >
+            <X className="size-4 text-muted-foreground" />
+          </button>
           <button
             onClick={() => toggleFavorite(p.id)}
             className="p-2 rounded-lg hover:bg-muted transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center"

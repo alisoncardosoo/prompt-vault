@@ -5,7 +5,6 @@ import {
   LayoutGrid,
   List,
   ChevronDown,
-  CheckCircle2,
   Star,
   Trash2,
   Search,
@@ -20,6 +19,7 @@ import {
   Clock,
   X,
 } from "lucide-react";
+import { toast } from "sonner";
 import { usePromptStore, timeAgo } from "@/lib/promptStore";
 import { AppSidebar } from "@/components/app/Sidebar";
 import { AppHeader } from "@/components/app/Header";
@@ -561,20 +561,6 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
   );
 }
 
-function formatBuildTime(iso: string): string {
-  const date = new Date(iso);
-  return new Intl.DateTimeFormat("pt-BR", {
-    dateStyle: "short",
-    timeStyle: "short",
-  }).format(date);
-}
-
-function forceRefreshApp() {
-  const url = new URL(window.location.href);
-  url.searchParams.set("refresh", String(Date.now()));
-  window.location.href = url.toString();
-}
-
 function Page() {
   const {
     prompts,
@@ -606,27 +592,51 @@ function Page() {
   const [mobileSection, setMobileSection] = useState<MobileSection>("home");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
+  const [showFolders, setShowFolders] = useState(false);
   const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">("pref:viewMode", "grid");
   const [sortBy, setSortBy] = useLocalStorage<"recent" | "alpha" | "rating">(
     "pref:sortBy",
     "recent",
   );
-  const [nowMs, setNowMs] = useState(() => Date.now());
-  const buildTime = new Date(__APP_BUILD_TIME__);
-  const isBuildTimeValid = !Number.isNaN(buildTime.getTime());
-  const buildAgeMinutes = Math.floor((nowMs - buildTime.getTime()) / 60000);
-  const isLikelyFresh = isBuildTimeValid && buildAgeMinutes <= 30;
-  const buildStatusText = isLikelyFresh ? "Atualizado recentemente" : "Pode haver versão mais nova";
 
   const SORT_LABELS = { recent: "Recente", alpha: "A–Z", rating: "Avaliação" } as const;
 
   useEffect(() => {
     setShowAll(false);
+    setShowFolders(false);
   }, [view, viewArg, search]);
 
+  // Daily auto-backup to localStorage (keeps last 7 days)
   useEffect(() => {
-    const timer = window.setInterval(() => setNowMs(Date.now()), 60000);
-    return () => window.clearInterval(timer);
+    const today = new Date().toISOString().slice(0, 10);
+    const lastBackup = localStorage.getItem("promptlibrary-auto-backup-date");
+    if (lastBackup === today) return;
+    const state = usePromptStore.getState();
+    if (!state.prompts.length && !state.categories.length) return;
+    try {
+      const data = JSON.stringify({
+        prompts: state.prompts,
+        categories: state.categories,
+        userName: state.userName,
+        exportedAt: Date.now(),
+      });
+      localStorage.setItem(`promptlibrary-backup-${today}`, data);
+      localStorage.setItem("promptlibrary-auto-backup-date", today);
+      // Keep only last 7 daily backups
+      const keys = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k?.startsWith("promptlibrary-backup-202")) keys.push(k);
+      }
+      keys.sort();
+      keys.slice(0, Math.max(0, keys.length - 7)).forEach((k) => localStorage.removeItem(k));
+      toast.success("Backup automático realizado", {
+        description: `Dados salvos localmente — ${today}`,
+        duration: 4000,
+      });
+    } catch {
+      // localStorage cheio — silencia
+    }
   }, []);
 
   useEffect(() => {
@@ -766,12 +776,45 @@ function Page() {
                     </div>
 
                     <div className="hidden md:block">
-                      <CategoryCards />
+                      {showFolders ? (
+                        <div>
+                          <div className="flex items-center gap-3 mb-5">
+                            <button
+                              onClick={() => setShowFolders(false)}
+                              className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors"
+                            >
+                              <ArrowLeft className="size-3.5" /> Voltar
+                            </button>
+                            <h2 className="text-base font-semibold">
+                              Todas as pastas
+                              <span className="ml-1.5 text-sm font-normal text-muted-foreground">
+                                ({categories.length})
+                              </span>
+                            </h2>
+                          </div>
+                          <CategoryCards />
+                        </div>
+                      ) : (
+                        <>
+                          <CategoryCards limit={5} />
+                          {categories.length > 5 && (
+                            <button
+                              onClick={() => setShowFolders(true)}
+                              className="mt-3 text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                            >
+                              Ver mais {categories.length - 5} pasta
+                              {categories.length - 5 > 1 ? "s" : ""} →
+                            </button>
+                          )}
+                        </>
+                      )}
                     </div>
 
-                    <div className="mt-6 lg:mt-8 mb-4">
-                      <h2 className="text-base font-semibold">Prompts recentes</h2>
-                    </div>
+                    {!showFolders && (
+                      <div className="mt-6 lg:mt-8 mb-4">
+                        <h2 className="text-base font-semibold">Prompts recentes</h2>
+                      </div>
+                    )}
                   </>
                 ) : (
                   <div className="mb-5 lg:mb-6 flex items-start justify-between gap-3">
@@ -799,70 +842,41 @@ function Page() {
                   </div>
                 )}
 
-                {filtered.length === 0 ? (
-                  <div className="text-center text-sm text-muted-foreground py-20">
-                    {view === "trash" ? "A lixeira está vazia." : "Nenhum prompt aqui ainda."}
-                  </div>
-                ) : (
-                  <div
-                    className={
-                      viewMode === "grid"
-                        ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
-                        : "flex flex-col gap-2"
-                    }
-                  >
-                    {(showAll ? filtered : filtered.slice(0, 12)).map((p) => (
-                      <PromptCard
-                        key={p.id}
-                        prompt={p}
-                        mode={viewMode}
-                        inTrash={view === "trash"}
-                      />
-                    ))}
-                  </div>
-                )}
-
-                {!showAll && filtered.length > 12 && (
-                  <button
-                    onClick={() => setShowAll(true)}
-                    className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm rounded-2xl shadow-sm hover:bg-card/80 min-h-[48px] transition-all duration-150"
-                  >
-                    Mostrar mais {filtered.length - 12} prompts
-                  </button>
-                )}
-
-                <div className="lg:hidden mt-4 px-5 md:px-0">
-                  <div className="rounded-2xl border border-border/30 bg-card/50 backdrop-blur-sm px-3 py-2 text-[11px] text-muted-foreground">
-                    <div className="flex items-center gap-1.5 justify-between">
-                      <div className="flex items-center gap-1.5">
-                        Publicado em:{" "}
-                        {isBuildTimeValid
-                          ? formatBuildTime(__APP_BUILD_TIME__)
-                          : "horário indisponível"}
-                        <CheckCircle2
-                          className={cn(
-                            "size-3.5",
-                            isLikelyFresh ? "text-emerald-500" : "text-amber-500",
-                          )}
-                        />
-                        <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
-                          {buildStatusText}
-                        </span>
+                {!showFolders && (
+                  <>
+                    {filtered.length === 0 ? (
+                      <div className="text-center text-sm text-muted-foreground py-20">
+                        {view === "trash" ? "A lixeira está vazia." : "Nenhum prompt aqui ainda."}
                       </div>
-                      {!isLikelyFresh && (
-                        <button
-                          onClick={forceRefreshApp}
-                          className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
-                        >
-                          Atualizar
-                        </button>
-                      )}
-                    </div>
-                    <p className="mt-1.5 border-t border-border/30 pt-1.5">
-                      Desenvolvido por Alison Cardoso.
-                    </p>
-                  </div>
-                </div>
+                    ) : (
+                      <div
+                        className={
+                          viewMode === "grid"
+                            ? "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3"
+                            : "flex flex-col gap-2"
+                        }
+                      >
+                        {(showAll ? filtered : filtered.slice(0, 12)).map((p) => (
+                          <PromptCard
+                            key={p.id}
+                            prompt={p}
+                            mode={viewMode}
+                            inTrash={view === "trash"}
+                          />
+                        ))}
+                      </div>
+                    )}
+
+                    {!showAll && filtered.length > 12 && (
+                      <button
+                        onClick={() => setShowAll(true)}
+                        className="w-full mt-4 py-3 text-sm text-muted-foreground bg-card/60 backdrop-blur-sm rounded-2xl shadow-sm hover:bg-card/80 min-h-[48px] transition-all duration-150"
+                      >
+                        Mostrar mais {filtered.length - 12} prompts
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
             </div>
           </main>
@@ -871,28 +885,8 @@ function Page() {
         </div>
 
         {/* Desktop-only footer */}
-        <footer className="hidden lg:flex h-8 px-4 items-center justify-between text-[11px] text-muted-foreground border-t border-border/30 bg-background/50 shrink-0">
-          <div className="flex items-center gap-1.5">
-            Publicado em:{" "}
-            {isBuildTimeValid ? formatBuildTime(__APP_BUILD_TIME__) : "horário indisponível"}
-            <CheckCircle2
-              className={cn("size-3.5", isLikelyFresh ? "text-emerald-500" : "text-amber-500")}
-            />
-            <span className={isLikelyFresh ? "text-emerald-600" : "text-amber-600"}>
-              {buildStatusText}
-            </span>
-          </div>
-          <div className="flex items-center gap-3">
-            <span>Desenvolvido por Alison Cardoso.</span>
-            {!isLikelyFresh && (
-              <button
-                onClick={forceRefreshApp}
-                className="rounded-md border border-amber-500/40 px-2 py-0.5 text-[10px] font-medium text-amber-600 hover:bg-amber-500/10"
-              >
-                Atualizar app
-              </button>
-            )}
-          </div>
+        <footer className="hidden lg:flex h-8 px-4 items-center justify-end text-[11px] text-muted-foreground border-t border-border/30 bg-background/50 shrink-0">
+          <span>Desenvolvido por Alison Cardoso.</span>
         </footer>
       </div>
 

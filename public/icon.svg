@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <filter id="card-shadow" x="-8%" y="-8%" width="116%" height="120%">
+      <feDropShadow dx="0" dy="10" stdDeviation="14" flood-color="#00000014"/>
+    </filter>
+  </defs>
+  <!-- Background -->
+  <rect width="512" height="512" fill="#EFEFEF"/>
+  <!-- Card -->
+  <rect x="28" y="22" width="456" height="468" rx="96" fill="white" filter="url(#card-shadow)"/>
+  <!-- Document lines left column -->
+  <rect x="46" y="142" width="116" height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="46" y="192" width="98"  height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="46" y="242" width="112" height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="46" y="292" width="92"  height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="46" y="342" width="116" height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="46" y="392" width="102" height="20" rx="10" fill="#DFDFDF"/>
+  <!-- Document lines right column -->
+  <rect x="350" y="142" width="116" height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="368" y="192" width="98"  height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="354" y="242" width="112" height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="374" y="292" width="92"  height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="350" y="342" width="116" height="20" rx="10" fill="#DFDFDF"/>
+  <rect x="364" y="392" width="102" height="20" rx="10" fill="#DFDFDF"/>
+  <!-- P letter -->
+  <text
+    x="256" y="372"
+    font-family="Georgia, 'Times New Roman', 'Palatino Linotype', serif"
+    font-size="296"
+    font-weight="bold"
+    text-anchor="middle"
+    fill="#1A1A1A"
+  >P</text>
+</svg>
