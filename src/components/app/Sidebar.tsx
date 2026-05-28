@@ -404,11 +404,7 @@ function SidebarInner({
 
         {/* Tags */}
         <div>
-          <SectionHeader
-            label="Tags"
-            icon={Tag}
-            collapsed={collapsed}
-          />
+          <SectionHeader label="Tags" icon={Tag} collapsed={collapsed} />
           <div className="space-y-0.5 mt-1">
             <NavItem
               collapsed={collapsed}
