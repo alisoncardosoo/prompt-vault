@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   Star,
   Clock,
@@ -156,15 +156,23 @@ function SidebarInner({
     renameCategory,
   } = usePromptStore();
   const tags = Array.from(new Set(prompts.flatMap((p) => p.tags))).sort();
+  const [showAllTags, setShowAllTags] = useState(false);
+  const tagsRef = useRef<HTMLDivElement>(null);
+  const [tagsOverflow, setTagsOverflow] = useState(false);
   const [openSections, setOpenSections] = useState({
     biblioteca: true,
     pastas: false,
-    tags: false,
     organizacao: true,
   });
 
   const toggleSection = (key: keyof typeof openSections) =>
     setOpenSections((prev) => ({ ...prev, [key]: !prev[key] }));
+
+  useEffect(() => {
+    const el = tagsRef.current;
+    if (!el || showAllTags) return;
+    setTagsOverflow(el.scrollHeight > el.clientHeight + 1);
+  }, [tags, showAllTags]);
 
   const counts = {
     all: prompts.length,
@@ -400,32 +408,42 @@ function SidebarInner({
             label="Tags"
             icon={Tag}
             collapsed={collapsed}
-            isOpen={openSections.tags}
-            onToggle={() => toggleSection("tags")}
           />
-          {openSections.tags && (
+          <div className="space-y-0.5 mt-1">
+            <NavItem
+              collapsed={collapsed}
+              active={view === "tags"}
+              onClick={nav(() => setView("tags"))}
+              icon={Tag}
+              label="Todas as tags"
+              count={tags.length || undefined}
+            />
+          </div>
+          {!collapsed && tags.length > 0 && (
             <>
-              <div className="space-y-0.5 mt-1">
-                <NavItem
-                  collapsed={collapsed}
-                  active={view === "tags"}
-                  onClick={nav(() => setView("tags"))}
-                  icon={Tag}
-                  label="Todas as tags"
-                  count={tags.length || undefined}
-                />
+              <div
+                ref={tagsRef}
+                className={cn(
+                  "flex flex-wrap gap-1.5 mt-1 px-2 pb-1",
+                  !showAllTags && "max-h-[280px] overflow-hidden",
+                )}
+              >
+                {tags.map((t) => (
+                  <TagPill
+                    key={t}
+                    tag={t}
+                    active={view === "tag" && viewArg === t}
+                    onClick={nav(() => setView("tag", t))}
+                  />
+                ))}
               </div>
-              {!collapsed && tags.length > 0 && (
-                <div className="flex flex-wrap gap-1.5 mt-1 px-2 pb-1">
-                  {tags.map((t) => (
-                    <TagPill
-                      key={t}
-                      tag={t}
-                      active={view === "tag" && viewArg === t}
-                      onClick={nav(() => setView("tag", t))}
-                    />
-                  ))}
-                </div>
+              {tagsOverflow && (
+                <button
+                  onClick={() => setShowAllTags((v) => !v)}
+                  className="mt-1 px-2 text-[11px] text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  {showAllTags ? "Ver menos" : "Ver todas"}
+                </button>
               )}
             </>
           )}
