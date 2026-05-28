@@ -176,11 +176,6 @@ function SidebarInner({
     onNavigate?.();
   };
 
-  const handleRefreshApp = () => {
-    if (typeof window !== "undefined") {
-      window.location.reload();
-    }
-  };
 
   return (
     <TooltipProvider delayDuration={300}>
@@ -442,22 +437,6 @@ function SidebarInner({
           )}
         </div>
       </div>
-
-      {!collapsed && (
-        <div className="shrink-0 border-t border-border/30 px-3 py-3">
-          <div className="rounded-2xl border border-border/40 bg-background/50 backdrop-blur-sm p-3 space-y-2">
-            <p className="text-xs text-muted-foreground">Publicado em: 18/05/2026, 18:44</p>
-            <p className="text-xs text-muted-foreground">Pode haver versão mais nova</p>
-            <button
-              type="button"
-              onClick={handleRefreshApp}
-              className="w-full rounded-lg bg-primary/15 px-2.5 py-2 text-xs font-medium text-foreground transition-colors hover:bg-primary/25 active:bg-primary/30"
-            >
-              Atualizar app
-            </button>
-          </div>
-        </div>
-      )}
 
       {/* Expand button — only shown when collapsed, desktop only */}
       {!sidebarOpen && collapsed && (
