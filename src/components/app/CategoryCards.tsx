@@ -45,9 +45,11 @@ const styles: Record<string, { bg: string; bgCard: string; icon: typeof Folder; 
 export function CategoryCards({
   horizontal = false,
   limit,
+  compact = false,
 }: {
   horizontal?: boolean;
   limit?: number;
+  compact?: boolean;
 }) {
   const { categories, prompts, setView, renameCategory, setCategoryColor, deleteCategory } =
     usePromptStore();
@@ -57,7 +59,9 @@ export function CategoryCards({
       className={
         horizontal
           ? "flex gap-3 overflow-x-auto pb-3 scrollbar-none"
-          : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3"
+          : compact
+            ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-3"
+            : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7 gap-3"
       }
     >
       {visible.map((c) => {

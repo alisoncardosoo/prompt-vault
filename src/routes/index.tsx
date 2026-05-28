@@ -570,7 +570,7 @@ function MobileHomeContent({ mobileSection }: { mobileSection: MobileSection }) 
   );
 }
 
-function TagsPage({ viewMode }: { viewMode: "grid" | "list" }) {
+function TagsPage({ viewMode, panelOpen }: { viewMode: "grid" | "list"; panelOpen: boolean }) {
   const { prompts, setView } = usePromptStore();
   const [activeTag, setActiveTag] = useState<string | null>(null);
 
@@ -665,7 +665,9 @@ function TagsPage({ viewMode }: { viewMode: "grid" | "list" }) {
               <div
                 className={
                   viewMode === "grid"
-                    ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3"
+                    ? panelOpen
+                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3"
+                      : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3"
                     : "flex flex-col gap-2"
                 }
               >
@@ -695,6 +697,7 @@ function Page() {
     viewArg,
     categories,
     search,
+    selectedId,
     openEditor,
     emptyTrash,
     purgeTrashedPrompts,
@@ -704,6 +707,7 @@ function Page() {
     settingsOpen,
     setImageImportOpen,
   } = usePromptStore();
+  const panelOpen = !!selectedId;
 
   useEffect(() => {
     purgeTrashedPrompts();
@@ -839,7 +843,7 @@ function Page() {
           >
             <div className="pb-24 lg:pb-4">
               {view === "all" && !search && <MobileHomeContent mobileSection={mobileSection} />}
-              {view === "tags" && <TagsPage viewMode={viewMode} />}
+              {view === "tags" && <TagsPage viewMode={viewMode} panelOpen={panelOpen} />}
 
               {view !== "tags" && (
                 <div className={cn(view === "all" && !search ? "hidden lg:block" : "")}>
@@ -919,10 +923,10 @@ function Page() {
                                 </span>
                               </h2>
                             </div>
-                            <CategoryCards />
+                            <CategoryCards compact={panelOpen} />
                           </div>
                         ) : (
-                          <CategoryCards />
+                          <CategoryCards compact={panelOpen} />
                         )}
                       </div>
 
@@ -968,7 +972,9 @@ function Page() {
                         <div
                           className={
                             viewMode === "grid"
-                              ? "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3"
+                              ? panelOpen
+                                ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-3"
+                                : "grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6 gap-3"
                               : "flex flex-col gap-2"
                           }
                         >

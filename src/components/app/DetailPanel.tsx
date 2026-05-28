@@ -571,7 +571,7 @@ export function DetailPanel() {
     <>
       {/* Desktop: permanent side panel */}
       {p && (
-        <aside className="hidden lg:flex w-[420px] shrink-0 border-l border-border bg-card flex-col h-full relative">
+        <aside className="hidden lg:flex w-[360px] xl:w-[420px] shrink-0 border-l border-border bg-card flex-col h-full relative">
           <PromptDetail prompt={p} />
         </aside>
       )}
