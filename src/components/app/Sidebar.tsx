@@ -176,7 +176,6 @@ function SidebarInner({
     onNavigate?.();
   };
 
-
   return (
     <TooltipProvider delayDuration={300}>
       {/* Logo */}
@@ -186,7 +185,7 @@ function SidebarInner({
         <ThemedPromptIcon className="size-9 shadow-sm shrink-0" />
         {!collapsed && (
           <>
-            <span className="font-semibold text-[15px] flex-1">PromptLibrary</span>
+            <span className="font-semibold text-[15px] flex-1">Prompt Vault</span>
             {!sidebarOpen && (
               <Tooltip>
                 <TooltipTrigger asChild>

@@ -122,7 +122,7 @@ export function AuthScreen() {
           <div className="mb-4 flex justify-center">
             <ThemedPromptIcon className="size-16 rounded-2xl" />
           </div>
-          <h1 className="text-2xl font-bold text-foreground">PromptLibrary</h1>
+          <h1 className="text-2xl font-bold text-foreground">Prompt Vault</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             {mode === "signin" && "Entre na sua conta"}
             {mode === "signup" && "Crie sua conta"}

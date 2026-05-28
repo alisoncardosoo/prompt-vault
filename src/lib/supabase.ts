@@ -5,7 +5,7 @@ const key = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
 
 if (!url || !key || url === "undefined") {
   console.error(
-    "[PromptLibrary] Variáveis de ambiente Supabase não encontradas.\n" + "VITE_SUPABASE_URL:",
+    "[Prompt Vault] Variáveis de ambiente Supabase não encontradas.\n" + "VITE_SUPABASE_URL:",
     url,
     "\n" + "VITE_SUPABASE_ANON_KEY:",
     key ? "(definida)" : "(indefinida)",
