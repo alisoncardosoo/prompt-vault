@@ -23,6 +23,7 @@ import { usePromptStore, type Prompt } from "@/lib/promptStore";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { uploadPromptAttachments } from "@/lib/attachmentStorage";
+import { compressImageFile } from "@/lib/imageCompression";
 
 type Attachment = Prompt["attachments"][number];
 
@@ -90,21 +91,23 @@ export function PromptEditor() {
 
   const handleFiles = (files: FileList | null) => {
     if (!files) return;
-    Array.from(files).forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
+    Array.from(files).forEach(async (file) => {
+      try {
+        const compressed = await compressImageFile(file);
         setAttachments((prev) => [
           ...prev,
           {
             id: Math.random().toString(36).slice(2, 10),
-            name: file.name,
-            size: file.size,
-            type: file.type,
-            data: e.target?.result as string,
+            name: compressed.name,
+            size: compressed.size,
+            type: compressed.type,
+            data: compressed.data,
           },
         ]);
-      };
-      reader.readAsDataURL(file);
+      } catch (err) {
+        console.error(err);
+        toast.error(`Falha ao processar o anexo "${file.name}".`);
+      }
     });
   };
 
@@ -140,7 +143,11 @@ export function PromptEditor() {
       closeEditor();
     } catch (err) {
       console.error(err);
-      toast.error("Falha no envio do anexo. Verifique o bucket do Supabase Storage.");
+      const detail =
+        err instanceof Error && err.message
+          ? err.message
+          : "verifique o bucket do Supabase Storage";
+      toast.error(`Falha no envio do anexo: ${detail}`);
     } finally {
       setSaving(false);
     }
