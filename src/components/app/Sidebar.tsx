@@ -15,6 +15,7 @@ import {
   Trash2,
   Check,
   LayoutGrid,
+  HardDrive,
 } from "lucide-react";
 import { usePromptStore, type Category } from "@/lib/promptStore";
 import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
@@ -28,6 +29,50 @@ import {
 import { cn } from "@/lib/utils";
 import { ThemedPromptIcon } from "@/components/app/ThemedPromptIcon";
 import { TagPill } from "@/components/app/TagPill";
+import { useAuth } from "@/lib/auth";
+import { getAccountStorageUsage } from "@/lib/attachmentStorage";
+
+// Limite de armazenamento do plano gratuito do Supabase Storage.
+const STORAGE_LIMIT_BYTES = 1024 * 1024 * 1024; // 1 GB
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+  if (bytes < 1024 * 1024 * 1024) return `${(bytes / 1024 / 1024).toFixed(1)} MB`;
+  return `${(bytes / 1024 / 1024 / 1024).toFixed(2)} GB`;
+}
+
+function StorageCard({ usedBytes, fileCount }: { usedBytes: number; fileCount: number }) {
+  const pct = Math.min(100, (usedBytes / STORAGE_LIMIT_BYTES) * 100);
+  const near = pct >= 80;
+  return (
+    <div className="rounded-xl border border-border/40 bg-sidebar-accent/30 p-3 space-y-2">
+      <div className="flex items-center gap-2">
+        <HardDrive className="size-3.5 text-muted-foreground shrink-0" />
+        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+          Armazenamento
+        </span>
+      </div>
+      <div className="h-1.5 w-full rounded-full bg-border/50 overflow-hidden">
+        <div
+          className={cn(
+            "h-full rounded-full transition-all duration-500",
+            near ? "bg-destructive" : "bg-primary",
+          )}
+          style={{ width: `${Math.max(pct, usedBytes > 0 ? 2 : 0)}%` }}
+        />
+      </div>
+      <div className="flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
+        <span>
+          {formatBytes(usedBytes)} de {formatBytes(STORAGE_LIMIT_BYTES)}
+        </span>
+        <span>
+          {fileCount} {fileCount === 1 ? "arquivo" : "arquivos"}
+        </span>
+      </div>
+    </div>
+  );
+}
 
 const catBg: Record<Category["color"], string> = {
   amber: "bg-cat-amber",
@@ -180,6 +225,36 @@ function SidebarInner({
     recent: prompts.filter((p) => p.lastUsedAt).length,
     attachments: prompts.reduce((s, p) => s + p.attachments.length, 0),
   };
+
+  // Uso de armazenamento: soma local dos anexos (ativos + lixeira) usada como
+  // fallback enquanto o tamanho real do bucket não chega do Supabase.
+  const allAttachments = [...prompts, ...trashedPrompts].flatMap((p) => p.attachments);
+  const localUsedBytes = allAttachments.reduce((s, a) => s + (a.size || 0), 0);
+
+  // Uso real consultado no bucket do Supabase (inclui arquivos órfãos).
+  const { user } = useAuth();
+  const [remoteUsage, setRemoteUsage] = useState<{ bytes: number; files: number } | null>(null);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setRemoteUsage(null);
+      return;
+    }
+    let cancelled = false;
+    getAccountStorageUsage(user.id)
+      .then((usage) => {
+        if (!cancelled) setRemoteUsage(usage);
+      })
+      .catch((err) => {
+        console.error("Falha ao consultar uso do Storage:", err);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id, counts.attachments]);
+
+  const storageUsedBytes = remoteUsage?.bytes ?? localUsedBytes;
+  const storageFileCount = remoteUsage?.files ?? allAttachments.length;
 
   const nav = (cb: () => void) => () => {
     cb();
@@ -474,6 +549,26 @@ function SidebarInner({
           )}
         </div>
       </div>
+
+      {/* Armazenamento */}
+      {!collapsed ? (
+        <div className="border-t border-border/30 shrink-0 p-3">
+          <StorageCard usedBytes={storageUsedBytes} fileCount={storageFileCount} />
+        </div>
+      ) : (
+        <div className="border-t border-border/30 shrink-0 flex justify-center p-3">
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="p-1.5 text-muted-foreground">
+                <HardDrive className="size-4" />
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              Armazenamento: {formatBytes(storageUsedBytes)} de {formatBytes(STORAGE_LIMIT_BYTES)}
+            </TooltipContent>
+          </Tooltip>
+        </div>
+      )}
 
       {/* Expand button — only shown when collapsed, desktop only */}
       {!sidebarOpen && collapsed && (

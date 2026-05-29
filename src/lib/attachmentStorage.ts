@@ -95,6 +95,43 @@ export async function uploadPromptAttachments(
   return uploaded;
 }
 
+/**
+ * Consulta o uso real de armazenamento do usuário no bucket do Supabase,
+ * somando o tamanho de todos os objetos sob a pasta do usuário (inclui
+ * arquivos órfãos que não estão mais referenciados por nenhum prompt).
+ */
+export async function getAccountStorageUsage(
+  userId: string,
+): Promise<{ bytes: number; files: number }> {
+  let bytes = 0;
+  let files = 0;
+
+  const folders = await supabase.storage.from(ATTACHMENTS_BUCKET).list(userId, { limit: 1000 });
+  if (folders.error) throw folders.error;
+
+  for (const entry of folders.data ?? []) {
+    // Pastas (por prompt) têm id === null; arquivos têm metadata.size.
+    if (entry.id !== null) {
+      bytes += entry.metadata?.size ?? 0;
+      files += 1;
+      continue;
+    }
+
+    const objects = await supabase.storage
+      .from(ATTACHMENTS_BUCKET)
+      .list(`${userId}/${entry.name}`, { limit: 1000 });
+    if (objects.error) throw objects.error;
+
+    for (const obj of objects.data ?? []) {
+      if (obj.id === null) continue; // subpasta inesperada
+      bytes += obj.metadata?.size ?? 0;
+      files += 1;
+    }
+  }
+
+  return { bytes, files };
+}
+
 export function getAttachmentPreviewUrl(attachment: Prompt["attachments"][number]): string | null {
   if (attachment.data) return attachment.data;
   if (attachment.url) return attachment.url;
