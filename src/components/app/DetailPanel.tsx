@@ -44,6 +44,7 @@ import {
   isAttachmentSynced,
   uploadPromptAttachments,
 } from "@/lib/attachmentStorage";
+import { compressImageFile } from "@/lib/imageCompression";
 
 function useIsDesktop() {
   const [isDesktop, setIsDesktop] = React.useState(() => window.innerWidth >= 1024);
@@ -143,37 +144,37 @@ function PromptDetail({ prompt: p }: { prompt: Prompt }) {
     setTimeout(() => setShared(false), 1500);
   };
 
-  const handleAddAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAddAttachment = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files ?? []);
-    if (!files.length) return;
-    const readers = files.map(
-      (file) =>
-        new Promise<Prompt["attachments"][number]>((resolve) => {
-          const reader = new FileReader();
-          reader.onload = () =>
-            resolve({
-              id: Math.random().toString(36).slice(2, 10),
-              name: file.name,
-              size: file.size,
-              type: file.type,
-              data: reader.result as string,
-            });
-          reader.readAsDataURL(file);
+    if (!files.length) {
+      e.target.value = "";
+      return;
+    }
+
+    try {
+      const newAttachments = await Promise.all(
+        files.map(async (file) => {
+          const compressed = await compressImageFile(file);
+          return {
+            id: Math.random().toString(36).slice(2, 10),
+            name: compressed.name,
+            size: compressed.size,
+            type: compressed.type,
+            data: compressed.data,
+          };
         }),
-    );
-    Promise.all(readers).then(async (newAttachments) => {
-      try {
-        const nextAttachments = [...p.attachments, ...newAttachments];
-        const uploadedAttachments =
-          user?.id && nextAttachments.length > 0
-            ? await uploadPromptAttachments(user.id, p.id, nextAttachments)
-            : nextAttachments;
-        savePrompt({ ...p, attachments: uploadedAttachments });
-      } catch (err) {
-        console.error(err);
-        toast.error("Falha no envio do anexo para sincronização.");
-      }
-    });
+      );
+
+      const nextAttachments = [...p.attachments, ...newAttachments];
+      const uploadedAttachments =
+        user?.id && nextAttachments.length > 0
+          ? await uploadPromptAttachments(user.id, p.id, nextAttachments)
+          : nextAttachments;
+      savePrompt({ ...p, attachments: uploadedAttachments });
+    } catch (err) {
+      console.error(err);
+      toast.error("Falha no envio do anexo para sincronização.");
+    }
     e.target.value = "";
   };
 

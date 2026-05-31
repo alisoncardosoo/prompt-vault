@@ -4,7 +4,8 @@
 
 const MAX_DIMENSION = 1600; // px — limite do maior lado
 const QUALITY = 0.7; // 0..1 — qualidade da re-codificação com perdas
-const COMPRESSIBLE = /^image\/(jpeg|jpg|png|webp)$/i;
+const IMAGE_EXTENSION_HINT = /\.(jpe?g|png|webp|heic|heif|avif)$/i;
+const UNSUPPORTED_IMAGE_TYPES = /^image\/(gif|svg\+xml)$/i;
 
 export type CompressedFile = {
   /** Data URL da imagem comprimida (ou original, se não comprimível). */
@@ -50,14 +51,50 @@ function replaceExtension(name: string, ext: string): string {
   return `${base}.${ext}`;
 }
 
+function shouldAttemptCompression(file: File): boolean {
+  if (file.type) return file.type.startsWith("image/") && !UNSUPPORTED_IMAGE_TYPES.test(file.type);
+  return IMAGE_EXTENSION_HINT.test(file.name);
+}
+
+function extensionForMime(mime: string): string {
+  const lower = mime.toLowerCase();
+  if (lower.includes("png")) return "png";
+  if (lower.includes("webp")) return "webp";
+  return "jpg";
+}
+
+async function toBlobWithType(
+  canvas: HTMLCanvasElement,
+  type: "image/webp" | "image/jpeg",
+): Promise<Blob | null> {
+  return new Promise((resolve) => canvas.toBlob(resolve, type, QUALITY));
+}
+
+async function encodeSmallestBlob(canvas: HTMLCanvasElement): Promise<Blob | null> {
+  const [webpBlob, jpegBlob] = await Promise.all([
+    toBlobWithType(canvas, "image/webp"),
+    toBlobWithType(canvas, "image/jpeg"),
+  ]);
+
+  const candidates = [webpBlob, jpegBlob].filter((blob): blob is Blob =>
+    Boolean(blob && blob.size > 0 && blob.type.startsWith("image/")),
+  );
+
+  if (candidates.length === 0) return null;
+  return candidates.reduce<Blob | null>((best, blob) => {
+    if (!best) return blob;
+    return blob.size < best.size ? blob : best;
+  }, null);
+}
+
 /**
- * Comprime uma imagem. Para tipos não comprimíveis (gif, heic, svg, não-imagem),
+ * Comprime uma imagem. Para tipos não comprimíveis (gif, svg, não-imagem),
  * retorna o arquivo original como data URL sem alterações.
  */
 export async function compressImageFile(file: File): Promise<CompressedFile> {
   const originalDataUrl = await readAsDataURL(file);
 
-  if (!COMPRESSIBLE.test(file.type)) {
+  if (!shouldAttemptCompression(file)) {
     return { data: originalDataUrl, size: file.size, type: file.type, name: file.name };
   }
 
@@ -75,10 +112,7 @@ export async function compressImageFile(file: File): Promise<CompressedFile> {
     if (!ctx) throw new Error("NO_CANVAS_CONTEXT");
     ctx.drawImage(img, 0, 0, targetW, targetH);
 
-    // Tenta WebP; alguns navegadores antigos caem para PNG no toBlob.
-    const blob = await new Promise<Blob | null>((resolve) =>
-      canvas.toBlob(resolve, "image/webp", QUALITY),
-    );
+    const blob = await encodeSmallestBlob(canvas);
 
     if (!blob) throw new Error("TOBLOB_FAILED");
 
@@ -87,8 +121,8 @@ export async function compressImageFile(file: File): Promise<CompressedFile> {
       return { data: originalDataUrl, size: file.size, type: file.type, name: file.name };
     }
 
-    const outType = blob.type || "image/webp";
-    const ext = outType.includes("png") ? "png" : "webp";
+    const outType = blob.type || "image/jpeg";
+    const ext = extensionForMime(outType);
     return {
       data: await blobToDataURL(blob),
       size: blob.size,

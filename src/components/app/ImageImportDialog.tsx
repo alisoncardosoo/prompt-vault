@@ -15,6 +15,7 @@ import { usePromptStore } from "@/lib/promptStore";
 import { analyzeImages } from "@/lib/aiImageAnalysis";
 import { useAuth } from "@/lib/auth";
 import { uploadPromptAttachments } from "@/lib/attachmentStorage";
+import { compressImageFile } from "@/lib/imageCompression";
 
 type ImagePreview = {
   id: string;
@@ -43,6 +44,12 @@ function inferCategory(tags: string[], tool: string, categories: { id: string; n
 }
 
 const uid = () => Math.random().toString(36).slice(2, 10);
+const IMAGE_NAME_HINT = /\.(jpe?g|png|webp|heic|heif|avif|gif)$/i;
+
+function isLikelyImageFile(file: File): boolean {
+  if (file.type.startsWith("image/")) return true;
+  return IMAGE_NAME_HINT.test(file.name);
+}
 
 export function ImageImportDialog({ open, onOpenChange }: Props) {
   const { aiProvider, aiApiKey, categories, savePrompt, setSettingsOpen } = usePromptStore();
@@ -62,20 +69,30 @@ export function ImageImportDialog({ open, onOpenChange }: Props) {
     onOpenChange(false);
   };
 
-  const addFiles = (files: FileList | null) => {
+  const addFiles = async (files: FileList | null) => {
     if (!files) return;
-    Array.from(files).forEach((file) => {
-      if (!file.type.startsWith("image/")) return;
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const data = e.target?.result as string;
-        setPreviews((prev) => [
-          ...prev,
-          { id: uid(), name: file.name, size: file.size, type: file.type, data },
-        ]);
-      };
-      reader.readAsDataURL(file);
-    });
+    const selectedFiles = Array.from(files).filter(isLikelyImageFile);
+    if (selectedFiles.length === 0) return;
+
+    try {
+      const processed = await Promise.all(
+        selectedFiles.map(async (file) => {
+          const compressed = await compressImageFile(file);
+          return {
+            id: uid(),
+            name: compressed.name,
+            size: compressed.size,
+            type: compressed.type,
+            data: compressed.data,
+          };
+        }),
+      );
+
+      setPreviews((prev) => [...prev, ...processed]);
+    } catch (err) {
+      console.error(err);
+      toast.error("Falha ao processar imagem para importacao.");
+    }
   };
 
   const removePreview = (id: string) => setPreviews((prev) => prev.filter((p) => p.id !== id));

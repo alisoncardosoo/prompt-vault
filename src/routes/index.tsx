@@ -55,6 +55,25 @@ const ImageImportDialog = lazy(() =>
 );
 
 type MobileSection = "home" | "todos" | "pastas" | "tags";
+const MOBILE_TABS_ORDER: MobileSection[] = ["home", "todos", "pastas", "tags"];
+const MOBILE_TAB_SWIPE_MIN_DISTANCE = 56;
+const MOBILE_TAB_SWIPE_RATIO = 1.2;
+
+function isInsideHorizontalScrollArea(target: EventTarget | null, boundary: HTMLElement | null) {
+  let node = target instanceof HTMLElement ? target : null;
+
+  while (node && node !== boundary) {
+    const style = window.getComputedStyle(node);
+    const canScrollHorizontally =
+      (style.overflowX === "auto" || style.overflowX === "scroll") &&
+      node.scrollWidth > node.clientWidth + 4;
+
+    if (canScrollHorizontally) return true;
+    node = node.parentElement;
+  }
+
+  return false;
+}
 
 function useLocalStorage<T>(key: string, fallback: T): [T, (v: T) => void] {
   const [value, setValue] = useState<T>(() => {
@@ -695,6 +714,7 @@ function Page() {
     userName,
     view,
     viewArg,
+    setView,
     categories,
     search,
     selectedId,
@@ -722,6 +742,8 @@ function Page() {
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [showAll, setShowAll] = useState(false);
   const [showFolders, setShowFolders] = useState(false);
+  const mobileMainRef = useRef<HTMLElement | null>(null);
+  const swipeStartRef = useRef<{ x: number; y: number } | null>(null);
   const [viewMode, setViewMode] = useLocalStorage<"grid" | "list">("pref:viewMode", "grid");
   const [sortBy, setSortBy] = useLocalStorage<"recent" | "alpha" | "rating">(
     "pref:sortBy",
@@ -824,6 +846,55 @@ function Page() {
   };
 
   const heading = headingByView();
+  const activeMobileTab: MobileSection | null =
+    view === "tags" ? "tags" : view === "all" ? mobileSection : null;
+
+  const selectMobileTab = (tab: MobileSection) => {
+    if (tab === "tags") {
+      setView("tags");
+      return;
+    }
+
+    setMobileSection(tab);
+    if (view !== "all") setView("all");
+  };
+
+  const handleMobileSwipeStart = (event: React.TouchEvent<HTMLElement>) => {
+    if (!activeMobileTab) return;
+    if (isInsideHorizontalScrollArea(event.target, mobileMainRef.current)) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    swipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleMobileSwipeEnd = (event: React.TouchEvent<HTMLElement>) => {
+    if (!activeMobileTab) return;
+
+    const start = swipeStartRef.current;
+    swipeStartRef.current = null;
+    if (!start) return;
+
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const isHorizontalSwipe =
+      Math.abs(deltaX) >= MOBILE_TAB_SWIPE_MIN_DISTANCE &&
+      Math.abs(deltaX) >= Math.abs(deltaY) * MOBILE_TAB_SWIPE_RATIO;
+
+    if (!isHorizontalSwipe) return;
+
+    const currentIndex = MOBILE_TABS_ORDER.indexOf(activeMobileTab);
+    if (currentIndex < 0) return;
+
+    const nextIndex = deltaX < 0 ? currentIndex + 1 : currentIndex - 1;
+    const nextTab = MOBILE_TABS_ORDER[nextIndex];
+    if (!nextTab) return;
+
+    selectMobileTab(nextTab);
+  };
 
   return (
     <div className="flex w-full h-dvh overflow-hidden bg-background text-foreground">
@@ -836,6 +907,9 @@ function Page() {
 
         <div className="flex-1 flex min-h-0">
           <main
+            ref={mobileMainRef}
+            onTouchStart={handleMobileSwipeStart}
+            onTouchEnd={handleMobileSwipeEnd}
             className={cn(
               "flex-1 overflow-y-auto overscroll-contain py-5 lg:py-7",
               view === "all" && !search ? "px-0 md:px-7 lg:px-10" : "px-5 md:px-7 lg:px-10",

@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="public/prompt-icon.png" width="96" alt="Prompt Library Logo" />
+<img src="public/prompt-icon.png" width="96" alt="Prompt Vault Logo" />
 
-# Prompt Library
+# Prompt Vault
 
 ### Organize, edite e sincronize seus prompts de IA em um só lugar
 
-[![Status](https://img.shields.io/badge/status-active-4ade80?style=flat-square)](https://github.com/alisoncardosoo/prompt-library)
+[![Status](https://img.shields.io/badge/status-active-4ade80?style=flat-square)](https://github.com/alisoncardosoo/prompt-vault)
 [![React](https://img.shields.io/badge/React-19-61dafb?style=flat-square&logo=react)](https://react.dev)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.8-3178c6?style=flat-square&logo=typescript)](https://www.typescriptlang.org)
 [![Vite](https://img.shields.io/badge/Vite-7-646cff?style=flat-square&logo=vite)](https://vitejs.dev)
@@ -37,9 +37,9 @@
 
 ## Sobre
 
-**Prompt Library** é uma aplicação web local-first para quem trabalha intensamente com IA. Em vez de perder tempo procurando prompts espalhados em arquivos de texto, notas ou histórico de conversas, você tem uma biblioteca centralizada, organizada por categorias e tags, com busca instantânea e sincronização em nuvem via Supabase.
+**Prompt Vault** é uma aplicação web local-first para quem trabalha intensamente com IA. Em vez de perder tempo procurando prompts espalhados em arquivos de texto, notas ou histórico de conversas, você tem uma biblioteca centralizada, organizada por categorias e tags, com busca instantânea e sincronização em nuvem via Supabase.
 
-**Problema que resolve:** profissionais que usam ferramentas de IA (ChatGPT, Claude, Gemini, etc.) acumulam dezenas de prompts reutilizáveis sem nenhum sistema para gerenciá-los. O Prompt Library resolve isso com uma interface rápida, offline-first e sincronizada.
+**Problema que resolve:** profissionais que usam ferramentas de IA (ChatGPT, Claude, Gemini, etc.) acumulam dezenas de prompts reutilizáveis sem nenhum sistema para gerenciá-los. O Prompt Vault resolve isso com uma interface rápida, offline-first e sincronizada.
 
 **Público-alvo:** desenvolvedores, designers, redatores, pesquisadores e qualquer pessoa que usa IA produtivamente no dia a dia.
 
@@ -141,10 +141,10 @@ src/
 
 ```bash
 # Clone o repositório
-git clone https://github.com/alisoncardosoo/prompt-library.git
+git clone https://github.com/alisoncardosoo/prompt-vault.git
 
 # Entre na pasta
-cd prompt-library
+cd prompt-vault
 
 # Instale as dependências
 npm install
