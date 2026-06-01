@@ -1,7 +1,6 @@
 export type ThemePreference = "light" | "dark" | "system";
 
-const LIGHT_THEME_COLOR = "#F5A623";
-const DARK_THEME_COLOR = "#0B2F6B";
+const APP_THEME_COLOR = "#1A1A1A";
 
 const iconPaths = {
   light: {
@@ -33,7 +32,7 @@ export function applyThemePreference(theme: ThemePreference) {
 
     const themeColor = document.querySelector<HTMLMetaElement>('meta[name="theme-color"]');
     if (themeColor) {
-      themeColor.content = isDark ? DARK_THEME_COLOR : LIGHT_THEME_COLOR;
+      themeColor.content = APP_THEME_COLOR;
     }
   };
 
